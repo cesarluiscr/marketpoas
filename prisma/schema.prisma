@@ -1,0 +1,35 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Listing {
+  id          String   @id @default(cuid())
+  type        String   // "venta" | "compra" (quiero vender / quiero comprar)
+  title       String
+  description String
+  price       Float
+  currency    String   @default("CRC") // Colones costarricenses
+  category    String
+  condition   String   @default("usado") // nuevo, usado, seminuevo
+  location    String   @default("Poás") // distrito dentro del cantón
+  imageUrl    String?
+  contactName String
+  contactPhone String
+  contactWhatsapp String?
+  status      String   @default("activo") // activo, vendido, pausado
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([type])
+  @@index([category])
+  @@index([status])
+  @@index([createdAt])
+}
