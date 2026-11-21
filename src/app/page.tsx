@@ -346,10 +346,10 @@ export default function Home() {
             <Button
               variant="outline"
               onClick={() => setLoginOpen(true)}
-              className="shrink-0 border-[#0a3d2e]/15 text-[#0a3d2e] bg-white/70 hover:bg-white rounded-xl h-11 gap-1.5"
+              className="shrink-0 border-[#0a3d2e]/15 text-[#0a3d2e] bg-white/70 hover:bg-white rounded-xl h-11 gap-1.5 px-3 sm:px-4"
             >
               <UserIcon className="h-4 w-4" />
-              <span className="hidden sm:inline text-sm font-semibold">Entrar</span>
+              <span className="text-sm font-semibold">Entrar</span>
             </Button>
           )}
 

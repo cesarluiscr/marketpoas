@@ -3,9 +3,9 @@
 import { useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import { X } from 'lucide-react'
-import PoasMap from '@/components/poas-map'
 import { DISTRICT_COORDS } from '@/lib/poas'
 import type { Listing } from '@/lib/market'
+import PoasMap from '@/components/poas-map'
 
 type MapMarker = {
   id: string
