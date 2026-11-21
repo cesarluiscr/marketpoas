@@ -72,9 +72,6 @@ export default function HomeTab(props: any) {
                 <span className="bg-gradient-to-r from-[#d4a017] via-[#f0c75e] to-[#d4a017] bg-clip-text text-transparent">entre vecinos</span>{' '}
                 de Poás 🌋
               </h1>
-              <p className="text-sm sm:text-base text-white/80 mt-3 max-w-md">
-                Café fresco, fresas, terrenos y mucho más, directo de San Pedro, San Juan, Carrizal y Sabana Redonda.
-              </p>
             </div>
             <div className="flex gap-3 shrink-0">
               <HeroStat icon={<TrendingUp className="h-5 w-5" />} value={stats.venta} label="Se vende" accent="gold" />
