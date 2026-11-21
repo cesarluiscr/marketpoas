@@ -17,19 +17,18 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         if (!credentials?.email) return null
         const email = credentials.email.toLowerCase().trim()
-        const name = credentials.name?.trim() || email.split('@')[0]
+        const name = credentials.name?.trim()
 
-        // Buscar o crear usuario
+        // Buscar usuario existente (el registro es aparte ahora)
         let user = await db.user.findUnique({ where: { email } })
+
         if (!user) {
-          user = await db.user.create({
-            data: {
-              email,
-              name,
-            },
-          })
-        } else if (name && name !== user.name && user.name === email.split('@')[0]) {
-          // Actualizar nombre si lo acaba de ingresar
+          // No existe: no se puede loguear. Debe registrarse primero.
+          return null
+        }
+
+        // Si se proporcionó nombre y el usuario no tiene, actualizar
+        if (name && name !== user.name && (!user.name || user.name === email.split('@')[0])) {
           user = await db.user.update({ where: { id: user.id }, data: { name } })
         }
 
