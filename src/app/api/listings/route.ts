@@ -9,7 +9,8 @@ export const dynamic = 'force-dynamic'
 const DISTRICT_COORDS: Record<string, { lat: number; lng: number }> = {
   'San Pedro': { lat: 10.0746, lng: -84.2336 },
   'San Juan': { lat: 10.0587, lng: -84.2167 },
-  'Carrizal': { lat: 10.0920, lng: -84.2510 },
+  'San Rafael': { lat: 10.0420, lng: -84.2080 },
+  'Carrillos': { lat: 10.0920, lng: -84.2510 },
   'Sabana Redonda': { lat: 10.1080, lng: -84.2230 },
 }
 

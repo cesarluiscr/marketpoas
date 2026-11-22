@@ -19,7 +19,8 @@ export const CATEGORIES = [
 export const LOCATIONS = [
   'San Pedro',
   'San Juan',
-  'Carrizal',
+  'San Rafael',
+  'Carrillos',
   'Sabana Redonda',
 ] as const
 

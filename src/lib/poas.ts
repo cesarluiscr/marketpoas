@@ -2,7 +2,8 @@
 export const DISTRICT_COORDS: Record<string, { lat: number; lng: number; label: string }> = {
   'San Pedro': { lat: 10.0746, lng: -84.2336, label: 'San Pedro (cabecera)' },
   'San Juan': { lat: 10.0587, lng: -84.2167, label: 'San Juan' },
-  'Carrizal': { lat: 10.0920, lng: -84.2510, label: 'Carrizal' },
+  'San Rafael': { lat: 10.0420, lng: -84.2080, label: 'San Rafael' },
+  'Carrillos': { lat: 10.0920, lng: -84.2510, label: 'Carrillos' },
   'Sabana Redonda': { lat: 10.1080, lng: -84.2230, label: 'Sabana Redonda' },
 }
 

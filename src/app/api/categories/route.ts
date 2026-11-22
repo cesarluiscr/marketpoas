@@ -35,7 +35,7 @@ export async function GET() {
       'Ropa',
       'Otros',
     ]
-    const defaultLocations = ['San Pedro', 'San Juan', 'Carrizal', 'Sabana Redonda']
+    const defaultLocations = ['San Pedro', 'San Juan', 'San Rafael', 'Carrillos', 'Sabana Redonda']
 
     const categories = defaultCategories.map((c) => ({
       name: c,
