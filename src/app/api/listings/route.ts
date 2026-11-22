@@ -70,6 +70,24 @@ export async function GET(request: NextRequest) {
     if (sort === 'price_asc') orderBy = { price: 'asc' }
     if (sort === 'price_desc') orderBy = { price: 'desc' }
 
+    // Si se ordena por recientes, los promovidos van primero
+    if (sort === 'recent') {
+      const allListings = await db.listing.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        include: { user: { select: { name: true, image: true } } },
+      })
+      // Limpiar promociones expiradas y poner promovidos primero
+      const now = new Date()
+      const promoted = allListings.filter(
+        (l) => l.promoted && l.promotedUntil && new Date(l.promotedUntil) > now
+      )
+      const regular = allListings.filter(
+        (l) => !l.promoted || !l.promotedUntil || new Date(l.promotedUntil) <= now
+      )
+      return NextResponse.json({ listings: [...promoted, ...regular] })
+    }
+
     const listings = await db.listing.findMany({
       where,
       orderBy,

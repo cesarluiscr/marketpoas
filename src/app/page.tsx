@@ -1,6 +1,5 @@
 'use client'
 
-import dynamic from 'next/dynamic'
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import { useSession, signIn, signOut } from 'next-auth/react'
 import { useToast } from '@/hooks/use-toast'
@@ -32,28 +31,13 @@ import type { Listing } from '@/lib/market'
 import type { ConversationWithMeta, Message } from '@/components/market/types'
 import { io, Socket } from 'socket.io-client'
 
-const HomeTab = dynamic(() => import('@/components/market/home-tab'), {
-  loading: () => <div className="p-8 text-center text-sm text-[#0a3d2e]/60">Cargando…</div>,
-})
-const MapTab = dynamic(() => import('@/components/market/map-tab'), {
-  loading: () => <div className="p-8 text-center text-sm text-[#0a3d2e]/60">Cargando mapa…</div>,
-  ssr: false,
-})
-const ChatTab = dynamic(() => import('@/components/market/chat-tab'), {
-  loading: () => <div className="p-8 text-center text-sm text-[#0a3d2e]/60">Cargando chat…</div>,
-})
-const MineTab = dynamic(() => import('@/components/market/mine-tab'), {
-  loading: () => <div className="p-8 text-center text-sm text-[#0a3d2e]/60">Cargando…</div>,
-})
-const PublishModal = dynamic(() => import('@/components/market/publish-modal'), {
-  ssr: false,
-})
-const ListingDetailModal = dynamic(() => import('@/components/market/listing-detail'), {
-  ssr: false,
-})
-const LoginModal = dynamic(() => import('@/components/market/login-modal'), {
-  ssr: false,
-})
+import HomeTab from '@/components/market/home-tab'
+import MapTab from '@/components/market/map-tab'
+import ChatTab from '@/components/market/chat-tab'
+import MineTab from '@/components/market/mine-tab'
+import PublishModal from '@/components/market/publish-modal'
+import ListingDetailModal from '@/components/market/listing-detail'
+import LoginModal from '@/components/market/login-modal'
 
 type Tab = 'home' | 'map' | 'chat' | 'mine'
 
@@ -76,6 +60,8 @@ export default function Home() {
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null)
   const [publishOpen, setPublishOpen] = useState(false)
   const [loginOpen, setLoginOpen] = useState(false)
+
+  const [favoriteIds, setFavoriteIds] = useState<string[]>([])
 
   const [conversations, setConversations] = useState<ConversationWithMeta[]>([])
   const [activeConversation, setActiveConversation] = useState<ConversationWithMeta | null>(null)
@@ -145,6 +131,18 @@ export default function Home() {
     if (tab === 'chat') fetchConversations()
   }, [tab, fetchConversations])
 
+  // Cargar favoritos al iniciar sesión
+  useEffect(() => {
+    if (session) {
+      fetch('/api/favorites/list')
+        .then((r) => r.ok ? r.json() : { listings: [] })
+        .then((data) => setFavoriteIds(data.listings.map((l: any) => l.id)))
+        .catch(() => {})
+    } else {
+      setFavoriteIds([])
+    }
+  }, [session])
+
   // Service Worker (PWA)
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -210,6 +208,63 @@ export default function Home() {
     setCategoryFilter('todas')
     setLocationFilter('todas')
     setSearchQuery('')
+  }
+
+  const handleToggleFavorite = async (listingId: string) => {
+    if (!session) {
+      setLoginOpen(true)
+      return
+    }
+    try {
+      const res = await fetch('/api/favorites', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ listingId }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        if (data.favorited) {
+          setFavoriteIds((prev) => [...prev, listingId])
+        } else {
+          setFavoriteIds((prev) => prev.filter((id) => id !== listingId))
+        }
+      }
+    } catch {}
+  }
+
+  const handleNearMe = (onDone: () => void) => {
+    if (!navigator.geolocation) {
+      toast({ title: 'Geolocalización no disponible', variant: 'destructive' })
+      onDone()
+      return
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        // Filtrar listings por cercanía (usar los listings actuales con lat/lng)
+        const { latitude, longitude } = pos.coords
+        // Calcular distancia y ordenar por cercanía
+        const sorted = [...listings]
+          .map((l) => {
+            const dist = l.lat && l.lng
+              ? Math.sqrt(Math.pow(l.lat - latitude, 2) + Math.pow(l.lng - longitude, 2))
+              : 999
+            return { l, dist }
+          })
+          .sort((a, b) => a.dist - b.dist)
+          .map((x) => x.l)
+        setListings(sorted)
+        toast({
+          title: 'Cerca de ti',
+          description: `Anuncios ordenados por distancia a tu ubicación`,
+        })
+        onDone()
+      },
+      (err) => {
+        toast({ title: 'No se pudo obtener tu ubicación', variant: 'destructive' })
+        onDone()
+      },
+      { enableHighAccuracy: true, timeout: 8000 }
+    )
   }
 
   const handleOpenChat = async (listing: Listing) => {
@@ -383,6 +438,10 @@ export default function Home() {
           clearFilters={clearFilters}
           onCardClick={setSelectedListing}
           onPublish={() => (session ? setPublishOpen(true) : setLoginOpen(true))}
+          session={session}
+          favoriteIds={favoriteIds}
+          onToggleFavorite={handleToggleFavorite}
+          onNearMe={handleNearMe}
         />
       )}
 
@@ -502,6 +561,8 @@ export default function Home() {
           onOpenChange={(o) => !o && setSelectedListing(null)}
           onOpenChat={handleOpenChat}
           onLogin={() => { setSelectedListing(null); setLoginOpen(true) }}
+          isFavorite={favoriteIds.includes(selectedListing.id)}
+          onToggleFavorite={() => handleToggleFavorite(selectedListing.id)}
         />
       )}
 

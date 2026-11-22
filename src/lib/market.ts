@@ -92,4 +92,10 @@ export type Listing = {
   status: string
   createdAt: string
   updatedAt: string
+  lat?: number | null
+  lng?: number | null
+  userId?: string | null
+  views?: number
+  promoted?: boolean
+  promotedUntil?: string | null
 }

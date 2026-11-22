@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useToast } from '@/hooks/use-toast'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog'
-import { Plus, TrendingUp, TrendingDown, Image as ImageIcon } from 'lucide-react'
+import { Plus, TrendingUp, TrendingDown, Image as ImageIcon, Camera, X } from 'lucide-react'
 import { CATEGORIES, LOCATIONS, CONDITIONS, CATEGORY_ICONS } from '@/lib/market'
 
 export default function PublishModal({
@@ -23,6 +23,8 @@ export default function PublishModal({
 }) {
   const { toast } = useToast()
   const [submitting, setSubmitting] = useState(false)
+  const [uploadingPhoto, setUploadingPhoto] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
   const [form, setForm] = useState({
     type: 'venta' as 'venta' | 'compra',
     title: '',
@@ -36,6 +38,30 @@ export default function PublishModal({
     contactPhone: '',
     contactWhatsapp: '',
   })
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploadingPhoto(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      const res = await fetch('/api/upload', { method: 'POST', body: formData })
+      const data = await res.json()
+      if (res.ok) {
+        setForm((prev) => ({ ...prev, imageUrl: data.url }))
+        toast({ title: 'Foto subida' })
+      } else {
+        toast({ title: 'Error', description: data.error, variant: 'destructive' })
+      }
+    } catch {
+      toast({ title: 'Error de red', variant: 'destructive' })
+    } finally {
+      setUploadingPhoto(false)
+      // Limpiar input para poder subir la misma foto otra vez
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -133,8 +159,65 @@ export default function PublishModal({
             </div>
           </div>
           <div>
-            <Label htmlFor="imageUrl" className="text-sm font-medium flex items-center gap-1 text-[#0a3d2e]"><ImageIcon className="h-3.5 w-3.5" /> URL de imagen (opcional)</Label>
-            <Input id="imageUrl" type="url" value={form.imageUrl} onChange={(e) => setForm({ ...form, imageUrl: e.target.value })} placeholder="https://..." className="mt-1 rounded-xl border-[#0a3d2e]/15 focus-visible:ring-[#1a6b4a]" />
+            <Label className="text-sm font-medium flex items-center gap-1 text-[#0a3d2e] mb-2"><ImageIcon className="h-3.5 w-3.5" /> Foto del producto (opcional)</Label>
+
+            {/* Subir foto desde cámara/dispositivo */}
+            <div className="flex flex-col gap-2">
+              <input
+                type="file"
+                accept="image/*"
+                capture="environment"
+                ref={(el) => { fileInputRef.current = el }}
+                onChange={handleFileUpload}
+                className="hidden"
+                id="photo-upload"
+              />
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploadingPhoto}
+                  className="flex-1 border-[#0a3d2e]/15 text-[#0a3d2e] hover:bg-[#0a3d2e]/5 rounded-xl h-11 gap-2"
+                >
+                  {uploadingPhoto ? 'Subiendo...' : (<>
+                    <Camera className="h-4 w-4" />
+                    <span className="text-sm font-semibold">Tomar / subir foto</span>
+                  </>)}
+                </Button>
+                {form.imageUrl && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setForm({ ...form, imageUrl: '' })}
+                    className="text-red-600 hover:bg-red-50 rounded-xl h-11 w-11 shrink-0"
+                    aria-label="Quitar foto"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+              {form.imageUrl && (
+                <div className="relative aspect-video rounded-xl overflow-hidden border border-[#0a3d2e]/10">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={form.imageUrl} alt="Vista previa" className="w-full h-full object-cover" />
+                </div>
+              )}
+              {/* Opción avanzada: pegar URL */}
+              <details className="text-xs">
+                <summary className="text-[#0a3d2e]/60 cursor-pointer hover:text-[#0a3d2e] select-none">
+                  O pegar URL de imagen externa
+                </summary>
+                <Input
+                  type="url"
+                  value={form.imageUrl}
+                  onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
+                  placeholder="https://..."
+                  className="mt-2 rounded-xl border-[#0a3d2e]/15 focus-visible:ring-[#1a6b4a]"
+                />
+              </details>
+            </div>
           </div>
           <div className="border-t border-[#0a3d2e]/10 pt-4 space-y-3">
             <div className="text-sm font-semibold text-[#0a3d2e]">Información de contacto</div>

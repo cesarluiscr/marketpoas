@@ -26,6 +26,14 @@ model User {
   messagesReceived Message[] @relation("MessageTo")
   conversationsFrom Conversation[] @relation("ConvFrom")
   conversationsTo   Conversation[] @relation("ConvTo")
+  favorites        Favorite[]
+  offersMade       Offer[]  @relation("OfferFrom")
+  offersReceived   Offer[]  @relation("OfferTo")
+  questionsAsked   Question[] @relation("QFrom")
+  questionsAnswered Question[] @relation("QTo")
+  reviewsGiven     Review[]  @relation("ReviewFrom")
+  reviewsReceived Review[]  @relation("ReviewTo")
+  savedSearches    SavedSearch[]
 }
 
 model Account {
@@ -80,16 +88,23 @@ model Listing {
   contactWhatsapp String?
   status      String   @default("activo")
   userId      String?
+  views       Int      @default(0)
+  promoted    Boolean  @default(false)
+  promotedUntil DateTime?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
   conversations Conversation[]
+  favorites   Favorite[]
+  offers      Offer[]
+  questions   Question[]
 
   @@index([type])
   @@index([category])
   @@index([status])
   @@index([createdAt])
   @@index([userId])
+  @@index([promoted])
 }
 
 model Conversation {
@@ -123,4 +138,84 @@ model Message {
 
   @@index([conversationId, createdAt])
   @@index([toUserId, read])
+}
+
+// === Nuevas funcionalidades ===
+
+model Favorite {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listingId String
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, listingId])
+  @@index([userId])
+}
+
+model Offer {
+  id        String   @id @default(cuid())
+  listingId String
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  fromUserId String
+  fromUser   User    @relation("OfferFrom", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUserId   String
+  toUser     User    @relation("OfferTo", fields: [toUserId], references: [id], onDelete: Cascade)
+  amount     Float
+  message    String?
+  status     String  @default("pendiente") // pendiente | aceptada | rechazada
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([listingId])
+  @@index([toUserId, status])
+}
+
+model Question {
+  id        String   @id @default(cuid())
+  listingId String
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  fromUserId String
+  fromUser   User    @relation("QFrom", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUserId   String
+  toUser     User    @relation("QTo", fields: [toUserId], references: [id], onDelete: Cascade)
+  body       String
+  answer     String?
+  answeredAt DateTime?
+  createdAt  DateTime @default(now())
+
+  @@index([listingId])
+  @@index([toUserId, answeredAt])
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  fromUserId String
+  fromUser   User    @relation("ReviewFrom", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUserId   String
+  toUser     User    @relation("ReviewTo", fields: [toUserId], references: [id], onDelete: Cascade)
+  rating     Int     // 1 a 5
+  comment    String?
+  createdAt  DateTime @default(now())
+
+  @@unique([fromUserId, toUserId])
+  @@index([toUserId])
+}
+
+model SavedSearch {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  search    String?
+  type      String?  // venta | compra
+  category  String?
+  location  String?
+  minPrice  Float?
+  maxPrice  Float?
+  lastNotifiedAt DateTime @default(now())
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }

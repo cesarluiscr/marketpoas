@@ -23,6 +23,8 @@ import {
   Coffee,
   MapPin,
   Plus,
+  Heart,
+  LocateFixed,
 } from 'lucide-react'
 import {
   CATEGORIES,
@@ -39,9 +41,12 @@ export default function HomeTab(props: any) {
     searchQuery, typeFilter, setTypeFilter,
     categoryFilter, setCategoryFilter,
     hasActiveFilters, clearFilters, onCardClick, onPublish,
+    session, favoriteIds, onToggleFavorite,
+    onNearMe,
   } = props
 
   const [filtersOpen, setFiltersOpen] = useState(false)
+  const [nearMeLoading, setNearMeLoading] = useState(false)
 
   return (
     <>
@@ -138,6 +143,20 @@ export default function HomeTab(props: any) {
               <SelectItem value="price_desc">Precio: mayor primero</SelectItem>
             </SelectContent>
           </Select>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setNearMeLoading(true)
+              onNearMe?.(() => setNearMeLoading(false))
+            }}
+            disabled={nearMeLoading}
+            className="h-9 border-[#1a6b4a]/30 text-[#1a6b4a] hover:bg-[#1a6b4a]/5 rounded-xl gap-1.5"
+            title="Ver anuncios cerca de tu ubicación"
+          >
+            <LocateFixed className="h-3.5 w-3.5" />
+            {nearMeLoading ? 'Buscando...' : 'Cerca de mí'}
+          </Button>
           {hasActiveFilters && (
             <Button variant="ghost" size="sm" onClick={clearFilters} className="text-[#0a3d2e]/70 hover:text-[#0a3d2e] hover:bg-[#0a3d2e]/5 h-9 ml-auto">
               <X className="h-3.5 w-3.5 mr-1" /> Limpiar
@@ -163,7 +182,7 @@ export default function HomeTab(props: any) {
               </div>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-              {listings.map((l: Listing, idx: number) => (<ListingCard key={l.id} listing={l} onClick={() => onCardClick(l)} index={idx} />))}
+              {listings.map((l: Listing, idx: number) => (<ListingCard key={l.id} listing={l} onClick={() => onCardClick(l)} index={idx} favorited={favoriteIds?.includes(l.id)} onToggleFavorite={onToggleFavorite} session={session} />))}
             </div>
           </>
         )}
@@ -260,10 +279,16 @@ function CategoryChip({ active, onClick, label, icon }: { active: boolean; onCli
   )
 }
 
-function ListingCard({ listing, onClick, index }: { listing: Listing; onClick: () => void; index: number }) {
+function ListingCard({ listing, onClick, index, favorited, onToggleFavorite, session }: any) {
   const isVenta = listing.type === 'venta'
+  const isPromoted = listing.promoted && listing.promotedUntil && new Date(listing.promotedUntil) > new Date()
+  const handleFavClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (!session) return
+    onToggleFavorite?.(listing.id)
+  }
   return (
-    <Card onClick={onClick} className="group overflow-hidden cursor-pointer hover:shadow-volcano-lg transition-all duration-300 border-[#0a3d2e]/10 p-0 gap-0 rounded-2xl hover:-translate-y-0.5 animate-fade-in-up bg-white" style={{ animationDelay: `${Math.min(index * 30, 400)}ms` }}>
+    <Card onClick={onClick} className={`group overflow-hidden cursor-pointer hover:shadow-volcano-lg transition-all duration-300 border-[#0a3d2e]/10 p-0 gap-0 rounded-2xl hover:-translate-y-0.5 animate-fade-in-up bg-white ${isPromoted ? 'ring-2 ring-[#d4a017]/40' : ''}`} style={{ animationDelay: `${Math.min(index * 30, 400)}ms` }}>
       <div className="aspect-square bg-gradient-to-br from-[#fdf9ee] to-[#f5e8d0] relative overflow-hidden">
         <div className="absolute inset-0 flex items-center justify-center text-5xl transition-opacity" data-fallback="true">
           <span className="opacity-70">{CATEGORY_ICONS[listing.category] ?? '📦'}</span>
@@ -278,9 +303,25 @@ function ListingCard({ listing, onClick, index }: { listing: Listing; onClick: (
             {isVenta ? 'Se vende' : 'Se compra'}
           </Badge>
         </div>
+        {isPromoted && (
+          <div className="absolute top-2.5 left-2.5 translate-y-7">
+            <Badge className="bg-gradient-to-r from-[#d4a017] to-[#f0c75e] text-[#0a3d2e] border-0 px-2 py-0.5 rounded-full text-[10px] font-semibold shadow-sm">
+              <Sparkles className="h-2.5 w-2.5 mr-0.5 inline" /> Destacado
+            </Badge>
+          </div>
+        )}
         <div className="absolute top-2.5 right-2.5">
           <div className="bg-white/90 backdrop-blur text-[#0a3d2e] px-2 py-0.5 rounded-full text-[10px] font-medium capitalize shadow-sm">{listing.condition}</div>
         </div>
+        {session && (
+          <button
+            onClick={handleFavClick}
+            className="absolute bottom-2.5 right-2.5 h-8 w-8 rounded-full bg-white/90 backdrop-blur flex items-center justify-center shadow-sm hover:bg-white transition-colors"
+            aria-label={favorited ? 'Quitar de favoritos' : 'Añadir a favoritos'}
+          >
+            <Heart className={`h-4 w-4 ${favorited ? 'fill-[#c2185b] text-[#c2185b]' : 'text-[#0a3d2e]'}`} />
+          </button>
+        )}
       </div>
       <div className="p-3 space-y-1.5">
         <div className="font-semibold text-sm text-[#0a3d2e] line-clamp-2 leading-snug min-h-[2.5rem]">{listing.title}</div>
