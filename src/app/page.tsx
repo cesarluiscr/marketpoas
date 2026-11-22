@@ -29,6 +29,7 @@ import {
   Sun,
   Moon,
   Sparkles,
+  Shield,
 } from 'lucide-react'
 import type { Listing } from '@/lib/market'
 import type { ConversationWithMeta, Message } from '@/components/market/types'
@@ -40,11 +41,12 @@ import MapTab from '@/components/market/map-tab'
 import ChatTab from '@/components/market/chat-tab'
 import MineTab from '@/components/market/mine-tab'
 import CommunityTab from '@/components/market/community-tab'
+import AdminTab from '@/components/market/admin-tab'
 import PublishModal from '@/components/market/publish-modal'
 import ListingDetailModal from '@/components/market/listing-detail'
 import LoginModal from '@/components/market/login-modal'
 
-type Tab = 'home' | 'map' | 'chat' | 'mine' | 'community'
+type Tab = 'home' | 'map' | 'chat' | 'mine' | 'community' | 'admin'
 
 export default function Home() {
   const { data: session, status } = useSession()
@@ -68,6 +70,21 @@ export default function Home() {
   const [loginOpen, setLoginOpen] = useState(false)
 
   const [favoriteIds, setFavoriteIds] = useState<string[]>([])
+  const [userRole, setUserRole] = useState<string | null>(null)
+
+  // Cargar rol del usuario al iniciar sesión
+  useEffect(() => {
+    if (!session) {
+      setUserRole(null)
+      return
+    }
+    fetch('/api/me')
+      .then((r) => r.ok ? r.json() : { user: null })
+      .then((data) => setUserRole(data.user?.role || null))
+      .catch(() => {})
+  }, [session])
+
+  const isAdmin = userRole === 'admin'
 
   const [conversations, setConversations] = useState<ConversationWithMeta[]>([])
   const [activeConversation, setActiveConversation] = useState<ConversationWithMeta | null>(null)
@@ -555,6 +572,10 @@ export default function Home() {
         <CommunityTab />
       )}
 
+      {tab === 'admin' && isAdmin && (
+        <AdminTab />
+      )}
+
       {/* PIE MÓVIL - Tech Center CR 2026 (visible antes del bottom nav) */}
       <div className="lg:hidden text-center py-4 text-[11px] text-[#0a3d2e]/50 px-4">
         Tech Center CR 2026
@@ -599,6 +620,14 @@ export default function Home() {
           icon={<UserIcon className="h-5 w-5" />}
           label="Míos"
         />
+        {isAdmin && (
+          <NavButton
+            active={tab === 'admin'}
+            onClick={() => setTab('admin')}
+            icon={<Shield className="h-5 w-5" />}
+            label="Admin"
+          />
+        )}
       </nav>
 
       {/* DESKTOP TAB BAR */}
@@ -619,6 +648,14 @@ export default function Home() {
           icon={<UserIcon className="h-4 w-4" />}
           label="Mis anuncios"
         />
+        {isAdmin && (
+          <DesktopNavButton
+            active={tab === 'admin'}
+            onClick={() => setTab('admin')}
+            icon={<Shield className="h-4 w-4" />}
+            label="Admin"
+          />
+        )}
       </nav>
 
       {/* MODALES */}

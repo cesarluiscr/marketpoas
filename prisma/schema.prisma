@@ -17,6 +17,9 @@ model User {
   image     String?
   phone     String?
   emailVerified DateTime?
+  // Rol y contraseña (solo admin tiene password)
+  role           String   @default("vecino") // vecino | admin
+  passwordHash   String?
   // KYC básico
   kycStatus      String   @default("no_verificado") // no_verificado | pendiente | verificado | rechazado
   kycIdImage     String?  // URL de la foto de cédula

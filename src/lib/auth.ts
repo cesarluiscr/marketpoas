@@ -1,6 +1,12 @@
 import type { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import { db } from '@/lib/db'
+import crypto from 'crypto'
+
+function hashPassword(password: string): string {
+  const salt = 'marketpoas-salt-2026'
+  return crypto.createHash('sha256').update(salt + password).digest('hex')
+}
 
 export const authOptions: NextAuthOptions = {
   session: {
@@ -9,6 +15,7 @@ export const authOptions: NextAuthOptions = {
   },
   providers: [
     CredentialsProvider({
+      id: 'credentials',
       name: 'Email',
       credentials: {
         email: { label: 'Email', type: 'email', placeholder: 'tu@correo.com' },
@@ -37,6 +44,36 @@ export const authOptions: NextAuthOptions = {
           email: user.email ?? '',
           name: user.name ?? '',
           image: user.image ?? '',
+          role: user.role,
+        }
+      },
+    }),
+    CredentialsProvider({
+      id: 'admin',
+      name: 'Administrador',
+      credentials: {
+        email: { label: 'Email', type: 'email', placeholder: 'admin@marketpoas.cr' },
+        password: { label: 'Contraseña', type: 'password' },
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) return null
+        const email = credentials.email.toLowerCase().trim()
+        const password = credentials.password
+
+        const user = await db.user.findUnique({ where: { email } })
+        if (!user) return null
+        if (user.role !== 'admin') return null
+        if (!user.passwordHash) return null
+
+        const hash = hashPassword(password)
+        if (hash !== user.passwordHash) return null
+
+        return {
+          id: user.id,
+          email: user.email ?? '',
+          name: user.name ?? '',
+          image: user.image ?? '',
+          role: user.role,
         }
       },
     }),
@@ -45,12 +82,14 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id
+        ;(token as any).role = (user as any).role
       }
       return token
     },
     async session({ session, token }) {
       if (session.user && token.id) {
         ;(session.user as any).id = token.id as string
+        ;(session.user as any).role = (token as any).role
       }
       return session
     },
