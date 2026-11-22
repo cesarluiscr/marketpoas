@@ -434,6 +434,11 @@ export default function Home() {
         />
       )}
 
+      {/* PIE MÓVIL - Tech Center CR 2026 (visible antes del bottom nav) */}
+      <div className="lg:hidden text-center py-4 text-[11px] text-[#0a3d2e]/50 px-4">
+        Tech Center CR 2026
+      </div>
+
       {/* FOOTER (desktop) */}
       <footer className="hidden lg:block mt-auto bg-gradient-to-b from-[#0a3d2e] to-[#062920] text-white/90 py-6 px-4">
         <div className="mx-auto max-w-6xl text-center text-xs text-white/60">
@@ -444,6 +449,9 @@ export default function Home() {
             <span>Cantón de Poás · Alajuela · Costa Rica</span>
           </div>
           Hecho con ☕ y 🍓 para los vecinos del cantón de Poás
+          <div className="mt-3 pt-3 border-t border-white/10 text-white/50">
+            Tech Center CR 2026
+          </div>
         </div>
       </footer>
 
