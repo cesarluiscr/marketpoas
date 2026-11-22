@@ -98,4 +98,62 @@ export type Listing = {
   views?: number
   promoted?: boolean
   promotedUntil?: string | null
+  // Campos meta por categoría
+  metaKm?: number | null
+  metaYear?: number | null
+  metaBrand?: string | null
+  metaModel?: string | null
+  metaAreaM2?: number | null
+  metaBedrooms?: number | null
+  metaBathrooms?: number | null
+  metaSize?: string | null
+  metaWeight?: string | null
+  metaCapacity?: string | null
+}
+
+// Definición de campos personalizados por categoría
+export type CategoryField = {
+  key: string
+  label: string
+  type: 'text' | 'number' | 'select'
+  placeholder?: string
+  options?: string[]
+  unit?: string
+}
+
+export const CATEGORY_FIELDS: Record<string, CategoryField[]> = {
+  'Vehículos': [
+    { key: 'metaBrand', label: 'Marca', type: 'text', placeholder: 'Ej: Toyota, Suzuki' },
+    { key: 'metaModel', label: 'Modelo', type: 'text', placeholder: 'Ej: Hilux, Swift' },
+    { key: 'metaYear', label: 'Año', type: 'number', placeholder: '2020' },
+    { key: 'metaKm', label: 'Kilometraje', type: 'number', placeholder: '50000', unit: 'km' },
+  ],
+  'Tecnología': [
+    { key: 'metaBrand', label: 'Marca', type: 'text', placeholder: 'Ej: Apple, Samsung' },
+    { key: 'metaModel', label: 'Modelo', type: 'text', placeholder: 'Ej: iPhone 13, Galaxy S22' },
+    { key: 'metaSize', label: 'Tamaño/Almacenamiento', type: 'text', placeholder: 'Ej: 128GB, 15 pulgadas' },
+  ],
+  'Inmuebles': [
+    { key: 'metaAreaM2', label: 'Área', type: 'number', placeholder: '200', unit: 'm²' },
+    { key: 'metaBedrooms', label: 'Habitaciones', type: 'number', placeholder: '3' },
+    { key: 'metaBathrooms', label: 'Baños', type: 'number', placeholder: '2' },
+  ],
+  'Ropa': [
+    { key: 'metaSize', label: 'Talla', type: 'select', options: ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'Única'] },
+    { key: 'metaBrand', label: 'Marca', type: 'text', placeholder: 'Ej: Nike, Adidas' },
+  ],
+  'Alimentos': [
+    { key: 'metaWeight', label: 'Peso/Cantidad', type: 'text', placeholder: 'Ej: 5 libras, 1 litro' },
+  ],
+  'Electrodomésticos': [
+    { key: 'metaBrand', label: 'Marca', type: 'text', placeholder: 'Ej: LG, Samsung' },
+    { key: 'metaCapacity', label: 'Capacidad', type: 'text', placeholder: 'Ej: 12 pies cúbicos' },
+  ],
+  'Herramientas': [
+    { key: 'metaBrand', label: 'Marca', type: 'text', placeholder: 'Ej: Bosch, Makita' },
+    { key: 'metaModel', label: 'Modelo', type: 'text', placeholder: 'Ej: Taladro 18V' },
+  ],
+  'Animales': [
+    { key: 'metaSize', label: 'Edad/Tamaño', type: 'text', placeholder: 'Ej: 6 meses, adulto' },
+  ],
 }

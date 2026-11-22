@@ -123,6 +123,10 @@ export async function POST(request: NextRequest) {
       contactName,
       contactPhone,
       contactWhatsapp,
+      // Campos meta por categoría
+      metaKm, metaYear, metaBrand, metaModel,
+      metaAreaM2, metaBedrooms, metaBathrooms,
+      metaSize, metaWeight, metaCapacity,
     } = body
 
     if (!type || !['venta', 'compra'].includes(type)) {
@@ -164,6 +168,17 @@ export async function POST(request: NextRequest) {
         contactWhatsapp: contactWhatsapp?.trim() ?? null,
         status: 'activo',
         userId: session?.user?.id ?? null,
+        // Campos meta por categoría
+        metaKm: metaKm ? Number(metaKm) : null,
+        metaYear: metaYear ? Number(metaYear) : null,
+        metaBrand: metaBrand?.trim() || null,
+        metaModel: metaModel?.trim() || null,
+        metaAreaM2: metaAreaM2 ? Number(metaAreaM2) : null,
+        metaBedrooms: metaBedrooms ? Number(metaBedrooms) : null,
+        metaBathrooms: metaBathrooms ? Number(metaBathrooms) : null,
+        metaSize: metaSize?.trim() || null,
+        metaWeight: metaWeight?.trim() || null,
+        metaCapacity: metaCapacity?.trim() || null,
       },
     })
 

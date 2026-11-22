@@ -10,8 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog'
-import { Plus, TrendingUp, TrendingDown, Image as ImageIcon, Camera, X } from 'lucide-react'
-import { CATEGORIES, LOCATIONS, CONDITIONS, CATEGORY_ICONS } from '@/lib/market'
+import { Plus, TrendingUp, TrendingDown, Image as ImageIcon, Camera, X, Package } from 'lucide-react'
+import { CATEGORIES, LOCATIONS, CONDITIONS, CATEGORY_ICONS, CATEGORY_FIELDS } from '@/lib/market'
 
 export default function PublishModal({
   open, onOpenChange, session, onPublished,
@@ -37,6 +37,17 @@ export default function PublishModal({
     contactName: session?.user?.name ?? '',
     contactPhone: '',
     contactWhatsapp: '',
+    // Campos meta (vacíos por defecto)
+    metaKm: '',
+    metaYear: '',
+    metaBrand: '',
+    metaModel: '',
+    metaAreaM2: '',
+    metaBedrooms: '',
+    metaBathrooms: '',
+    metaSize: '',
+    metaWeight: '',
+    metaCapacity: '',
   })
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -88,6 +99,9 @@ export default function PublishModal({
         type: 'venta', title: '', description: '', price: '',
         category: 'Alimentos', condition: 'usado', location: 'San Pedro',
         imageUrl: '', contactName: session?.user?.name ?? '', contactPhone: '', contactWhatsapp: '',
+        metaKm: '', metaYear: '', metaBrand: '', metaModel: '',
+        metaAreaM2: '', metaBedrooms: '', metaBathrooms: '',
+        metaSize: '', metaWeight: '', metaCapacity: '',
       })
       onPublished()
     } catch {
@@ -158,6 +172,52 @@ export default function PublishModal({
               </Select>
             </div>
           </div>
+
+          {/* Campos personalizados según categoría */}
+          {(CATEGORY_FIELDS[form.category] || []).length > 0 && (
+            <div className="bg-[#fdf9ee] rounded-2xl p-4 space-y-3 border border-[#0a3d2e]/8">
+              <div className="text-sm font-semibold text-[#0a3d2e] flex items-center gap-1.5">
+                <Package className="h-4 w-4 text-[#1a6b4a]" />
+                Especificaciones de {form.category}
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                {(CATEGORY_FIELDS[form.category] || []).map((f) => (
+                  <div key={f.key}>
+                    <Label className="text-xs font-medium text-[#0a3d2e]">
+                      {f.label}{f.unit ? ` (${f.unit})` : ''}
+                    </Label>
+                    {f.type === 'select' ? (
+                      <Select
+                        value={(form as any)[f.key]}
+                        onValueChange={(v) => setForm({ ...form, [f.key]: v })}
+                      >
+                        <SelectTrigger className="mt-1 rounded-xl border-[#0a3d2e]/15 h-10 text-sm">
+                          <SelectValue placeholder={`Selecciona ${f.label.toLowerCase()}`} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {(f.options || []).map((opt) => (
+                            <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <Input
+                        type={f.type === 'number' ? 'number' : 'text'}
+                        value={(form as any)[f.key]}
+                        onChange={(e) => setForm({ ...form, [f.key]: e.target.value })}
+                        placeholder={f.placeholder}
+                        className="mt-1 rounded-xl border-[#0a3d2e]/15 focus-visible:ring-[#1a6b4a] h-10 text-sm"
+                      />
+                    )}
+                  </div>
+                ))}
+              </div>
+              <p className="text-[11px] text-[#0a3d2e]/50">
+                💡 Estos datos ayudan a los compradores a encontrar tu anuncio más fácilmente.
+              </p>
+            </div>
+          )}
+
           <div>
             <Label className="text-sm font-medium flex items-center gap-1 text-[#0a3d2e] mb-2"><ImageIcon className="h-3.5 w-3.5" /> Foto del producto (opcional)</Label>
 

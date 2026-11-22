@@ -1,5 +1,14 @@
 import { db } from '@/lib/db'
 
+// Coordenadas aproximadas de los distritos del cantón de Poás
+const DISTRICT_COORDS: Record<string, { lat: number; lng: number }> = {
+  'San Pedro': { lat: 10.0746, lng: -84.2336 },
+  'San Juan': { lat: 10.0587, lng: -84.2167 },
+  'San Rafael': { lat: 10.0420, lng: -84.2080 },
+  'Carrillos': { lat: 10.0920, lng: -84.2510 },
+  'Sabana Redonda': { lat: 10.1080, lng: -84.2230 },
+}
+
 const sampleListings = [
   {
     type: 'venta',
@@ -232,7 +241,39 @@ async function main() {
   // Clear existing
   await db.listing.deleteMany({})
   for (const listing of sampleListings) {
-    await db.listing.create({ data: listing })
+    // Añadir lat/lng según el distrito
+    const coords = DISTRICT_COORDS[listing.location] ?? DISTRICT_COORDS['San Pedro']
+    const lat = coords.lat + (Math.random() - 0.5) * 0.012
+    const lng = coords.lng + (Math.random() - 0.5) * 0.012
+
+    // Añadir campos meta según categoría
+    const meta: any = {}
+    if (listing.category === 'Alimentos') {
+      meta.metaWeight = '5 libras'
+    } else if (listing.category === 'Vehículos' && listing.title.includes('Bicicleta')) {
+      meta.metaBrand = 'Trek'
+      meta.metaModel = 'Marlin 7'
+      meta.metaYear = 2022
+    } else if (listing.category === 'Inmuebles') {
+      meta.metaAreaM2 = 200
+      meta.metaBedrooms = 0
+      meta.metaBathrooms = 0
+    } else if (listing.category === 'Electrodomésticos') {
+      meta.metaBrand = 'LG'
+      meta.metaCapacity = '4 pies cúbicos'
+    } else if (listing.category === 'Herramientas') {
+      meta.metaBrand = 'Makita'
+      meta.metaModel = '18V'
+    }
+
+    await db.listing.create({
+      data: {
+        ...listing,
+        lat,
+        lng,
+        ...meta,
+      } as any,
+    })
   }
   console.log(`Seeded ${sampleListings.length} sample listings.`)
 }

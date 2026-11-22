@@ -91,6 +91,17 @@ model Listing {
   views       Int      @default(0)
   promoted    Boolean  @default(false)
   promotedUntil DateTime?
+  // Campos personalizados (meta) por categoría
+  metaKm        Int?      // Vehículos: kilometraje
+  metaYear      Int?      // Vehículos: año
+  metaBrand     String?   // Vehículos/Tecnología: marca
+  metaModel     String?   // Vehículos/Tecnología: modelo
+  metaAreaM2    Int?      // Inmuebles: área en m²
+  metaBedrooms  Int?      // Inmuebles: habitaciones
+  metaBathrooms Int?      // Inmuebles: baños
+  metaSize      String?   // Ropa/Tecnología: talla
+  metaWeight    String?   // Alimentos: peso (ej: "5 libras")
+  metaCapacity  String?   // Electrodomésticos: capacidad
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
@@ -98,6 +109,7 @@ model Listing {
   favorites   Favorite[]
   offers      Offer[]
   questions   Question[]
+  reports     Report[]
 
   @@index([type])
   @@index([category])
@@ -218,4 +230,18 @@ model SavedSearch {
   createdAt DateTime @default(now())
 
   @@index([userId])
+}
+
+model Report {
+  id          String   @id @default(cuid())
+  listingId   String
+  listing     Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  fromUserId  String?
+  reason      String   // spam | fraude | estafa | contenido inapropiado | otro
+  details     String?
+  status      String   @default("pendiente") // pendiente | revisado | descartado
+  createdAt   DateTime @default(now())
+
+  @@index([listingId])
+  @@index([status])
 }

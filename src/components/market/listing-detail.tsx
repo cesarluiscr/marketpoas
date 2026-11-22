@@ -11,15 +11,16 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
   MapPin, Tag, Phone, MessageCircle, MessageSquare, Sprout,
   Heart, Share2, Star, Eye, Send, TrendingDown, Sparkles, TrendingUp,
-  Info, Package, Hash, Calendar, Clock, BadgeCheck,
+  Info, Package, Hash, Calendar, Clock, BadgeCheck, Flag, Gauge, Ruler, Bed, Bath, Weight,
 } from 'lucide-react'
-import { formatCRCFull, formatRelativeTime, CATEGORY_ICONS } from '@/lib/market'
+import { formatCRCFull, formatRelativeTime, CATEGORY_ICONS, CATEGORY_FIELDS, type Listing } from '@/lib/market'
 import { useToast } from '@/hooks/use-toast'
 import { QuestionItem } from './question-item'
 import { OfferModal } from './offer-modal'
 import { ReviewModal } from './review-modal'
+import { ReportModal } from './report-modal'
+import MiniMap from './mini-map'
 
-type Listing = any
 type Question = {
   id: string
   body: string
@@ -52,6 +53,7 @@ export default function ListingDetailModal({
   const [avgRating, setAvgRating] = useState(0)
   const [showOffer, setShowOffer] = useState(false)
   const [showReview, setShowReview] = useState(false)
+  const [showReport, setShowReport] = useState(false)
 
   const isOwner = session?.user?.id && listing.userId === session.user.id
 
@@ -227,6 +229,35 @@ export default function ListingDetailModal({
     }
   }
 
+  const handleReportSubmit = async (reason: string, details: string) => {
+    try {
+      const res = await fetch('/api/reports', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          listingId: listing.id,
+          reason,
+          details,
+        }),
+      })
+      const data = await res.json()
+      if (res.ok) {
+        toast({
+          title: 'Denuncia enviada',
+          description: 'Gracias por ayudar a mantener MarketPoás seguro',
+        })
+      } else {
+        toast({ title: 'Error', description: data.error, variant: 'destructive' })
+      }
+    } catch {
+      toast({ title: 'Error de red', variant: 'destructive' })
+    }
+  }
+
+  // Filtrar los campos meta que tienen valor
+  const metaFields = (CATEGORY_FIELDS[listing.category] || [])
+    .filter((f) => listing[f.key] !== null && listing[f.key] !== undefined && listing[f.key] !== '')
+
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
@@ -307,6 +338,41 @@ export default function ListingDetailModal({
                 <div className="text-sm font-semibold text-[#0a3d2e] mb-1.5">Descripción</div>
                 <p className="text-sm text-[#0a3d2e]/80 whitespace-pre-line leading-relaxed">{listing.description}</p>
               </div>
+
+              {/* Campos personalizados por categoría (meta) */}
+              {metaFields.length > 0 && (
+                <div className="bg-[#fdf9ee] rounded-2xl p-4 space-y-2.5 border border-[#0a3d2e]/8">
+                  <div className="text-sm font-semibold text-[#0a3d2e] mb-2 flex items-center gap-1.5">
+                    <Package className="h-4 w-4 text-[#1a6b4a]" />
+                    Especificaciones
+                  </div>
+                  <div className="grid grid-cols-2 gap-2.5 text-xs">
+                    {metaFields.map((f) => (
+                      <MetaFieldRow key={f.key} field={f} value={listing[f.key]} />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Mini-mapa de ubicación */}
+              {listing.lat && listing.lng && (
+                <div className="space-y-2">
+                  <div className="text-sm font-semibold text-[#0a3d2e] flex items-center gap-1.5">
+                    <MapPin className="h-4 w-4 text-[#c2185b]" />
+                    Ubicación
+                  </div>
+                  <MiniMap
+                    lat={listing.lat}
+                    lng={listing.lng}
+                    label={`${listing.title} - ${listing.location}`}
+                    className="h-40 w-full"
+                  />
+                  <div className="text-[11px] text-[#0a3d2e]/60 flex items-center gap-1">
+                    <MapPin className="h-3 w-3" />
+                    {listing.location} · Cantón de Poás
+                  </div>
+                </div>
+              )}
 
               {/* Detalles del anuncio - cuadro con info estructurada */}
               <div className="bg-[#fdf9ee] rounded-2xl p-4 space-y-2.5 border border-[#0a3d2e]/8">
@@ -511,6 +577,18 @@ export default function ListingDetailModal({
                   <Sprout className="h-3.5 w-3.5 mt-0.5 shrink-0 text-[#1a6b4a]" />
                   <span>Reúnete en lugares públicos y verifica el producto antes de pagar. Cuídate entre vecinos.</span>
                 </div>
+
+                {/* Botón denunciar anuncio */}
+                {!isOwner && (
+                  <button
+                    onClick={() => setShowReport(true)}
+                    className="w-full flex items-center justify-center gap-1.5 text-[11px] text-[#0a3d2e]/40 hover:text-red-600 py-2 mt-1 transition-colors"
+                    aria-label="Denunciar anuncio"
+                  >
+                    <Flag className="h-3 w-3" />
+                    Denunciar anuncio
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -529,6 +607,13 @@ export default function ListingDetailModal({
         onOpenChange={setShowReview}
         sellerName={listing.contactName}
         onSubmit={handleReviewSubmit}
+      />
+
+      <ReportModal
+        open={showReport}
+        onOpenChange={setShowReport}
+        listingTitle={listing.title}
+        onSubmit={handleReportSubmit}
       />
     </>
   )
@@ -569,6 +654,33 @@ function StatBox({
       <div className="flex items-center justify-center text-[#1a6b4a] mb-1">{icon}</div>
       <div className="text-lg font-bold text-[#0a3d2e]">{value}</div>
       <div className="text-[10px] text-[#0a3d2e]/60 uppercase tracking-wide">{label}</div>
+    </div>
+  )
+}
+
+function MetaFieldRow({ field, value }: { field: any; value: any }) {
+  // Icono según el key del campo
+  const iconMap: Record<string, React.ReactNode> = {
+    metaKm: <Gauge className="h-3.5 w-3.5" />,
+    metaYear: <Calendar className="h-3.5 w-3.5" />,
+    metaBrand: <Tag className="h-3.5 w-3.5" />,
+    metaModel: <Package className="h-3.5 w-3.5" />,
+    metaAreaM2: <Ruler className="h-3.5 w-3.5" />,
+    metaBedrooms: <Bed className="h-3.5 w-3.5" />,
+    metaBathrooms: <Bath className="h-3.5 w-3.5" />,
+    metaSize: <Ruler className="h-3.5 w-3.5" />,
+    metaWeight: <Weight className="h-3.5 w-3.5" />,
+    metaCapacity: <Package className="h-3.5 w-3.5" />,
+  }
+  const icon = iconMap[field.key] || <Info className="h-3.5 w-3.5" />
+  const displayValue = field.unit ? `${value} ${field.unit}` : String(value)
+  return (
+    <div className="flex items-center gap-2 bg-white rounded-lg p-2 border border-[#0a3d2e]/8">
+      <div className="text-[#1a6b4a] shrink-0">{icon}</div>
+      <div className="flex-1 min-w-0">
+        <div className="text-[10px] text-[#0a3d2e]/50 uppercase tracking-wide">{field.label}</div>
+        <div className="text-xs font-semibold text-[#0a3d2e] truncate">{displayValue}</div>
+      </div>
     </div>
   )
 }
