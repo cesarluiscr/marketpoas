@@ -10,7 +10,8 @@ import { Input } from '@/components/ui/input'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
   MapPin, Tag, Phone, MessageCircle, MessageSquare, Sprout,
-  Heart, Share2, Star, Eye, Send, TrendingDown, Sparkles,
+  Heart, Share2, Star, Eye, Send, TrendingDown, Sparkles, TrendingUp,
+  Info, Package, Hash, Calendar, Clock, BadgeCheck,
 } from 'lucide-react'
 import { formatCRCFull, formatRelativeTime, CATEGORY_ICONS } from '@/lib/market'
 import { useToast } from '@/hooks/use-toast'
@@ -43,6 +44,7 @@ export default function ListingDetailModal({
   const [imgError, setImgError] = useState(false)
   const [favorited, setFavorited] = useState(isFavorite || false)
   const [views, setViews] = useState(listing.views || 0)
+  const [favoritedCount, setFavoritedCount] = useState(0)
   const [questions, setQuestions] = useState<Question[]>([])
   const [newQuestion, setNewQuestion] = useState('')
   const [submittingQ, setSubmittingQ] = useState(false)
@@ -63,6 +65,15 @@ export default function ListingDetailModal({
       if (res.ok) {
         const data = await res.json()
         setQuestions(data.questions || [])
+      }
+    } catch {}
+
+    // Contar favoritos de este anuncio
+    try {
+      const res = await fetch(`/api/favorites/count?listingId=${listing.id}`)
+      if (res.ok) {
+        const data = await res.json()
+        setFavoritedCount(data.count || 0)
       }
     } catch {}
 
@@ -265,12 +276,16 @@ export default function ListingDetailModal({
                     <span className="text-sm font-normal text-[#0a3d2e]/50 ml-1.5">colones</span>
                   </div>
                   <div className="flex items-center gap-1 text-xs text-[#0a3d2e]/50 ml-auto">
-                    <Eye className="h-3.5 w-3.5" /> {views} vistas
+                    <Eye className="h-3.5 w-3.5" /> {views} {views === 1 ? 'vista' : 'vistas'}
                   </div>
                 </div>
               </div>
 
+              {/* Badges */}
               <div className="flex flex-wrap gap-2">
+                <Badge className={`border-0 px-3 py-1 rounded-full text-xs font-semibold ${isVenta ? 'bg-[#1a6b4a] text-white' : 'bg-[#c2185b] text-white'}`}>
+                  {isVenta ? 'Se vende' : 'Se compra'}
+                </Badge>
                 <Badge variant="outline" className="bg-[#fdf9ee] border-[#0a3d2e]/15 text-[#0a3d2e] gap-1 rounded-full px-3 py-1">
                   <Tag className="h-3 w-3" /> {listing.category}
                 </Badge>
@@ -280,14 +295,48 @@ export default function ListingDetailModal({
                 <Badge variant="outline" className="bg-[#fdf9ee] border-[#0a3d2e]/15 text-[#0a3d2e] capitalize rounded-full px-3 py-1">
                   {listing.condition}
                 </Badge>
+                {listing.promoted && listing.promotedUntil && new Date(listing.promotedUntil) > new Date() && (
+                  <Badge className="bg-gradient-to-r from-[#d4a017] to-[#f0c75e] text-[#0a3d2e] border-0 px-3 py-1 rounded-full text-xs font-semibold">
+                    <Sparkles className="h-3 w-3 mr-0.5 inline" /> Destacado
+                  </Badge>
+                )}
               </div>
 
+              {/* Descripción */}
               <div>
                 <div className="text-sm font-semibold text-[#0a3d2e] mb-1.5">Descripción</div>
                 <p className="text-sm text-[#0a3d2e]/80 whitespace-pre-line leading-relaxed">{listing.description}</p>
               </div>
 
-              <div className="text-[11px] text-[#0a3d2e]/50">Publicado {formatRelativeTime(listing.createdAt)}</div>
+              {/* Detalles del anuncio - cuadro con info estructurada */}
+              <div className="bg-[#fdf9ee] rounded-2xl p-4 space-y-2.5 border border-[#0a3d2e]/8">
+                <div className="text-sm font-semibold text-[#0a3d2e] mb-2 flex items-center gap-1.5">
+                  <Info className="h-4 w-4 text-[#1a6b4a]" />
+                  Detalles del anuncio
+                </div>
+                <div className="grid grid-cols-2 gap-2.5 text-xs">
+                  <DetailRow icon={<Tag className="h-3.5 w-3.5" />} label="Categoría" value={listing.category} />
+                  <DetailRow icon={<Package className="h-3.5 w-3.5" />} label="Condición" value={listing.condition} capitalize />
+                  <DetailRow icon={<MapPin className="h-3.5 w-3.5" />} label="Distrito" value={listing.location} />
+                  <DetailRow icon={<TrendingUp className="h-3.5 w-3.5" />} label="Tipo" value={isVenta ? 'Venta' : 'Compra'} />
+                  <DetailRow icon={<Hash className="h-3.5 w-3.5" />} label="ID anuncio" value={`#${listing.id.slice(-6).toUpperCase()}`} />
+                  <DetailRow icon={<Calendar className="h-3.5 w-3.5" />} label="Publicado" value={formatRelativeTime(listing.createdAt)} />
+                </div>
+              </div>
+
+              {/* Estadísticas del anuncio */}
+              <div className="grid grid-cols-3 gap-2">
+                <StatBox icon={<Eye className="h-4 w-4" />} value={views} label={views === 1 ? 'Vista' : 'Vistas'} />
+                <StatBox icon={<MessageSquare className="h-4 w-4" />} value={questions.length} label={questions.length === 1 ? 'Pregunta' : 'Preguntas'} />
+                <StatBox icon={<Heart className="h-4 w-4" />} value={favoritedCount} label="Favoritos" />
+              </div>
+
+              <div className="text-[11px] text-[#0a3d2e]/50 flex items-center gap-1">
+                <Clock className="h-3 w-3" />
+                Publicado el {new Date(listing.createdAt).toLocaleDateString('es-CR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                {' · '}
+                Actualizado {formatRelativeTime(listing.updatedAt || listing.createdAt)}
+              </div>
 
               {/* Preguntas */}
               <div className="border-t border-[#0a3d2e]/10 pt-4 space-y-3">
@@ -329,25 +378,60 @@ export default function ListingDetailModal({
               {/* Contacto */}
               <div className="border-t border-[#0a3d2e]/10 pt-4 space-y-3">
                 <div className="flex items-center justify-between">
-                  <div className="text-sm font-semibold text-[#0a3d2e]">Contacto</div>
+                  <div className="text-sm font-semibold text-[#0a3d2e]">Información del vendedor</div>
                   {avgRating > 0 && (
-                    <div className="flex items-center gap-1 text-xs">
+                    <div className="flex items-center gap-1 text-xs bg-[#d4a017]/10 px-2 py-1 rounded-full">
                       <Star className="h-3.5 w-3.5 fill-[#d4a017] text-[#d4a017]" />
                       <span className="font-semibold text-[#0a3d2e]">{avgRating.toFixed(1)}</span>
-                      <span className="text-[#0a3d2e]/50">({reviews.length})</span>
+                      <span className="text-[#0a3d2e]/50">({reviews.length} {reviews.length === 1 ? 'reseña' : 'reseñas'})</span>
                     </div>
                   )}
                 </div>
 
-                <div className="flex items-center gap-2.5 text-sm">
-                  <Avatar className="h-10 w-10">
-                    <AvatarFallback className="bg-gradient-to-br from-[#1a6b4a] to-[#0a3d2e] text-white font-semibold">
+                {/* Tarjeta del vendedor */}
+                <div className="bg-[#fdf9ee] rounded-2xl p-3 border border-[#0a3d2e]/8 flex items-center gap-3">
+                  <Avatar className="h-12 w-12 shrink-0">
+                    <AvatarFallback className="bg-gradient-to-br from-[#1a6b4a] to-[#0a3d2e] text-white font-semibold text-lg">
                       {listing.contactName.charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
-                  <div className="font-medium text-[#0a3d2e]">{listing.contactName}</div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-[#0a3d2e] truncate">{listing.contactName}</div>
+                    {listing.userId ? (
+                      <div className="flex items-center gap-1 text-[10px] text-[#1a6b4a] font-medium">
+                        <BadgeCheck className="h-3 w-3" /> Vendedor verificado
+                      </div>
+                    ) : (
+                      <div className="text-[10px] text-[#0a3d2e]/50">Vendedor invitado</div>
+                    )}
+                    <div className="flex items-center gap-1 text-[10px] text-[#0a3d2e]/50 mt-0.5">
+                      <MapPin className="h-2.5 w-2.5" /> {listing.location}
+                    </div>
+                  </div>
+                  {avgRating > 0 && (
+                    <div className="text-right shrink-0">
+                      <div className="flex">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <Star
+                            key={i}
+                            className={`h-3 w-3 ${i < Math.round(avgRating) ? 'fill-[#d4a017] text-[#d4a017]' : 'text-[#0a3d2e]/15'}`}
+                          />
+                        ))}
+                      </div>
+                      <div className="text-[10px] text-[#0a3d2e]/60 mt-0.5">{avgRating.toFixed(1)}/5</div>
+                    </div>
+                  )}
                 </div>
 
+                {/* Datos de contacto directo */}
+                <div className="grid grid-cols-1 gap-2">
+                  <DetailRow icon={<Phone className="h-3.5 w-3.5 text-[#1a6b4a]" />} label="Teléfono" value={listing.contactPhone} />
+                  {listing.contactWhatsapp && (
+                    <DetailRow icon={<MessageCircle className="h-3.5 w-3.5 text-[#25D366]" />} label="WhatsApp" value={`+${listing.contactWhatsapp}`} />
+                  )}
+                </div>
+
+                {/* Botones de acción */}
                 <div className="grid grid-cols-1 gap-2">
                   {!isOwner && (
                     <>
@@ -447,5 +531,44 @@ export default function ListingDetailModal({
         onSubmit={handleReviewSubmit}
       />
     </>
+  )
+}
+
+// Sub-componentes para mostrar información del anuncio
+
+function DetailRow({
+  icon, label, value, capitalize,
+}: {
+  icon: React.ReactNode
+  label: string
+  value: string
+  capitalize?: boolean
+}) {
+  return (
+    <div className="flex items-center gap-2 bg-white rounded-lg p-2 border border-[#0a3d2e]/8">
+      <div className="text-[#1a6b4a] shrink-0">{icon}</div>
+      <div className="flex-1 min-w-0">
+        <div className="text-[10px] text-[#0a3d2e]/50 uppercase tracking-wide">{label}</div>
+        <div className={`text-xs font-semibold text-[#0a3d2e] truncate ${capitalize ? 'capitalize' : ''}`}>
+          {value}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function StatBox({
+  icon, value, label,
+}: {
+  icon: React.ReactNode
+  value: number
+  label: string
+}) {
+  return (
+    <div className="bg-[#fdf9ee] rounded-xl p-2.5 text-center border border-[#0a3d2e]/8">
+      <div className="flex items-center justify-center text-[#1a6b4a] mb-1">{icon}</div>
+      <div className="text-lg font-bold text-[#0a3d2e]">{value}</div>
+      <div className="text-[10px] text-[#0a3d2e]/60 uppercase tracking-wide">{label}</div>
+    </div>
   )
 }

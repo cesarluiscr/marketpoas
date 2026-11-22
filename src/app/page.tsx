@@ -267,6 +267,45 @@ export default function Home() {
     )
   }
 
+  const handleSaveSearch = async () => {
+    if (!session) {
+      setLoginOpen(true)
+      return
+    }
+    // Generar nombre automático
+    const parts: string[] = []
+    if (searchQuery.trim()) parts.push(`"${searchQuery.trim()}"`)
+    if (typeFilter !== 'todas') parts.push(typeFilter === 'venta' ? 'Vender' : 'Comprar')
+    if (categoryFilter !== 'todas') parts.push(categoryFilter)
+    if (locationFilter !== 'todas') parts.push(locationFilter)
+    const name = parts.length > 0 ? parts.join(' · ') : 'Mi búsqueda'
+
+    try {
+      const res = await fetch('/api/saved-searches', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name,
+          search: searchQuery.trim() || null,
+          type: typeFilter !== 'todas' ? typeFilter : null,
+          category: categoryFilter !== 'todas' ? categoryFilter : null,
+          location: locationFilter !== 'todas' ? locationFilter : null,
+        }),
+      })
+      if (res.ok) {
+        toast({
+          title: 'Búsqueda guardada',
+          description: 'Te avisaremos cuando aparezcan nuevos anuncios que coincidan',
+        })
+      } else {
+        const data = await res.json()
+        toast({ title: 'Error', description: data.error, variant: 'destructive' })
+      }
+    } catch {
+      toast({ title: 'Error de red', variant: 'destructive' })
+    }
+  }
+
   const handleOpenChat = async (listing: Listing) => {
     if (!session) {
       setLoginOpen(true)
@@ -442,6 +481,7 @@ export default function Home() {
           favoriteIds={favoriteIds}
           onToggleFavorite={handleToggleFavorite}
           onNearMe={handleNearMe}
+          onSaveSearch={handleSaveSearch}
         />
       )}
 

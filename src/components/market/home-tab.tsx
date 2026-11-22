@@ -25,6 +25,7 @@ import {
   Plus,
   Heart,
   LocateFixed,
+  Bookmark,
 } from 'lucide-react'
 import {
   CATEGORIES,
@@ -158,9 +159,21 @@ export default function HomeTab(props: any) {
             {nearMeLoading ? 'Buscando...' : 'Cerca de mí'}
           </Button>
           {hasActiveFilters && (
-            <Button variant="ghost" size="sm" onClick={clearFilters} className="text-[#0a3d2e]/70 hover:text-[#0a3d2e] hover:bg-[#0a3d2e]/5 h-9 ml-auto">
-              <X className="h-3.5 w-3.5 mr-1" /> Limpiar
-            </Button>
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={props.onSaveSearch}
+                disabled={!props.onSaveSearch}
+                className="h-9 border-[#1a6b4a]/30 text-[#1a6b4a] hover:bg-[#1a6b4a]/5 rounded-xl gap-1.5"
+                title="Guardar esta búsqueda y recibir alertas"
+              >
+                <Bookmark className="h-3.5 w-3.5" /> Guardar búsqueda
+              </Button>
+              <Button variant="ghost" size="sm" onClick={clearFilters} className="text-[#0a3d2e]/70 hover:text-[#0a3d2e] hover:bg-[#0a3d2e]/5 h-9">
+                <X className="h-3.5 w-3.5 mr-1" /> Limpiar
+              </Button>
+            </>
           )}
         </div>
 
