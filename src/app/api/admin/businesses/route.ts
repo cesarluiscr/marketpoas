@@ -16,6 +16,21 @@ async function requireAdmin() {
   return session
 }
 
+// GET /api/admin/businesses - Listar todos los comercios
+export async function GET() {
+  const admin = await requireAdmin()
+  if (!admin) return NextResponse.json({ error: 'Sin permisos' }, { status: 403 })
+
+  const businesses = await db.business.findMany({
+    orderBy: [
+      { verified: 'desc' },
+      { createdAt: 'desc' },
+    ],
+  })
+
+  return NextResponse.json({ businesses })
+}
+
 // PATCH /api/admin/businesses - Validar/desvalidar un comercio
 export async function PATCH(request: NextRequest) {
   const admin = await requireAdmin()

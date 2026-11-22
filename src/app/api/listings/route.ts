@@ -187,6 +187,22 @@ export async function POST(request: NextRequest) {
       },
     })
 
+    // Si es admin y quiere destacar el anuncio, aplicar promoción
+    if (body.promoted && session?.user?.id) {
+      const user = await db.user.findUnique({
+        where: { id: session.user.id },
+        select: { role: true },
+      })
+      if (user?.role === 'admin') {
+        const until = new Date()
+        until.setDate(until.getDate() + 7)
+        await db.listing.update({
+          where: { id: listing.id },
+          data: { promoted: true, promotedUntil: until },
+        })
+      }
+    }
+
     return NextResponse.json({ listing }, { status: 201 })
   } catch (error) {
     console.error('Error creating listing:', error)

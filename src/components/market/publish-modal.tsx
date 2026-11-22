@@ -10,16 +10,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog'
-import { Plus, TrendingUp, TrendingDown, Image as ImageIcon, Camera, X, Package } from 'lucide-react'
+import { Plus, TrendingUp, TrendingDown, Image as ImageIcon, Camera, X, Package, Sparkles } from 'lucide-react'
 import { CATEGORIES, LOCATIONS, CONDITIONS, CATEGORY_ICONS, CATEGORY_FIELDS } from '@/lib/market'
 
 export default function PublishModal({
-  open, onOpenChange, session, onPublished,
+  open, onOpenChange, session, onPublished, isAdmin,
 }: {
   open: boolean
   onOpenChange: (v: boolean) => void
   session: any
   onPublished: () => void
+  isAdmin?: boolean
 }) {
   const { toast } = useToast()
   const [submitting, setSubmitting] = useState(false)
@@ -37,6 +38,7 @@ export default function PublishModal({
     contactName: session?.user?.name ?? '',
     contactPhone: '',
     contactWhatsapp: '',
+    promoted: false, // Solo admin puede destacar
     // Campos meta (vacíos por defecto)
     metaKm: '',
     metaYear: '',
@@ -99,6 +101,7 @@ export default function PublishModal({
         type: 'venta', title: '', description: '', price: '',
         category: 'Alimentos', condition: 'usado', location: 'San Pedro',
         imageUrl: '', contactName: session?.user?.name ?? '', contactPhone: '', contactWhatsapp: '',
+        promoted: false,
         metaKm: '', metaYear: '', metaBrand: '', metaModel: '',
         metaAreaM2: '', metaBedrooms: '', metaBathrooms: '',
         metaSize: '', metaWeight: '', metaCapacity: '',
@@ -279,6 +282,29 @@ export default function PublishModal({
               </details>
             </div>
           </div>
+
+          {/* Toggle de destacado (solo admin) */}
+          {isAdmin && (
+            <div className="bg-gradient-to-br from-[#d4a017]/10 to-[#f0c75e]/15 rounded-2xl p-3 border border-[#d4a017]/30 flex items-center gap-3">
+              <input
+                type="checkbox"
+                id="promoted"
+                checked={form.promoted}
+                onChange={(e) => setForm({ ...form, promoted: e.target.checked })}
+                className="h-5 w-5 rounded accent-[#d4a017] shrink-0"
+              />
+              <label htmlFor="promoted" className="flex-1 cursor-pointer">
+                <div className="text-sm font-semibold text-[#0a3d2e] flex items-center gap-1">
+                  <Sparkles className="h-4 w-4 text-[#d4a017]" />
+                  Destacar anuncio (admin)
+                </div>
+                <div className="text-[11px] text-[#0a3d2e]/60">
+                  Aparecerá primero con badge dorado por 7 días
+                </div>
+              </label>
+            </div>
+          )}
+
           <div className="border-t border-[#0a3d2e]/10 pt-4 space-y-3">
             <div className="text-sm font-semibold text-[#0a3d2e]">Información de contacto</div>
             <div>

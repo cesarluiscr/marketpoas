@@ -16,6 +16,19 @@ async function requireAdmin() {
   return session
 }
 
+// GET /api/admin/events - Listar todos los eventos
+export async function GET() {
+  const admin = await requireAdmin()
+  if (!admin) return NextResponse.json({ error: 'Sin permisos' }, { status: 403 })
+
+  const events = await db.event.findMany({
+    orderBy: { date: 'desc' },
+    take: 100,
+  })
+
+  return NextResponse.json({ events })
+}
+
 // POST /api/admin/events - Crear evento del cantón
 export async function POST(request: NextRequest) {
   const admin = await requireAdmin()

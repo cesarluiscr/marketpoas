@@ -677,6 +677,7 @@ export default function Home() {
           open={publishOpen}
           onOpenChange={setPublishOpen}
           session={session}
+          isAdmin={isAdmin}
           onPublished={() => { fetchListings(); fetchStats() }}
         />
       )}

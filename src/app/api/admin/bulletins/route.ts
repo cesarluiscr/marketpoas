@@ -16,6 +16,19 @@ async function requireAdmin() {
   return session
 }
 
+// GET /api/admin/bulletins - Listar todos los avisos
+export async function GET() {
+  const admin = await requireAdmin()
+  if (!admin) return NextResponse.json({ error: 'Sin permisos' }, { status: 403 })
+
+  const bulletins = await db.bulletin.findMany({
+    orderBy: { createdAt: 'desc' },
+    take: 100,
+  })
+
+  return NextResponse.json({ bulletins })
+}
+
 // POST /api/admin/bulletins - Crear aviso del tablón
 export async function POST(request: NextRequest) {
   const admin = await requireAdmin()
