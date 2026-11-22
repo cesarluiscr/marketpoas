@@ -26,23 +26,29 @@ import {
   X,
   Mountain,
   Search,
+  Sun,
+  Moon,
+  Sparkles,
 } from 'lucide-react'
 import type { Listing } from '@/lib/market'
 import type { ConversationWithMeta, Message } from '@/components/market/types'
 import { io, Socket } from 'socket.io-client'
+import { useTheme } from '@/components/theme-provider'
 
 import HomeTab from '@/components/market/home-tab'
 import MapTab from '@/components/market/map-tab'
 import ChatTab from '@/components/market/chat-tab'
 import MineTab from '@/components/market/mine-tab'
+import CommunityTab from '@/components/market/community-tab'
 import PublishModal from '@/components/market/publish-modal'
 import ListingDetailModal from '@/components/market/listing-detail'
 import LoginModal from '@/components/market/login-modal'
 
-type Tab = 'home' | 'map' | 'chat' | 'mine'
+type Tab = 'home' | 'map' | 'chat' | 'mine' | 'community'
 
 export default function Home() {
   const { data: session, status } = useSession()
+  const { theme, toggleTheme } = useTheme()
   const { toast } = useToast()
 
   const [tab, setTab] = useState<Tab>('home')
@@ -447,6 +453,18 @@ export default function Home() {
             </Button>
           )}
 
+          {/* Toggle tema */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleTheme}
+            className="shrink-0 text-[#0a3d2e]/60 hover:text-[#0a3d2e] hover:bg-[#0a3d2e]/5 rounded-full h-11 w-11"
+            aria-label={theme === 'dark' ? 'Activar modo claro' : 'Activar modo oscuro'}
+            title={theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}
+          >
+            {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+          </Button>
+
           <Button
             onClick={() => (session ? setPublishOpen(true) : setLoginOpen(true))}
             className="shrink-0 bg-gradient-to-br from-[#0a3d2e] to-[#1a6b4a] hover:from-[#062920] hover:to-[#0a3d2e] text-white gap-1.5 shadow-volcano rounded-xl h-11 px-4"
@@ -533,6 +551,10 @@ export default function Home() {
         />
       )}
 
+      {tab === 'community' && (
+        <CommunityTab />
+      )}
+
       {/* PIE MÓVIL - Tech Center CR 2026 (visible antes del bottom nav) */}
       <div className="lg:hidden text-center py-4 text-[11px] text-[#0a3d2e]/50 px-4">
         Tech Center CR 2026
@@ -555,9 +577,15 @@ export default function Home() {
       </footer>
 
       {/* BOTTOM NAV (mobile) */}
-      <nav className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur border-t border-[#0a3d2e]/10 px-2 py-1.5 flex items-center justify-around shadow-[0_-4px_16px_rgba(0,0,0,0.05)]">
+      <nav className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur border-t border-[#0a3d2e]/10 px-1 py-1.5 flex items-center justify-around shadow-[0_-4px_16px_rgba(0,0,0,0.05)]">
         <NavButton active={tab === 'home'} onClick={() => setTab('home')} icon={<HomeIcon className="h-5 w-5" />} label="Inicio" />
         <NavButton active={tab === 'map'} onClick={() => setTab('map')} icon={<MapIcon className="h-5 w-5" />} label="Mapa" />
+        <NavButton
+          active={tab === 'community'}
+          onClick={() => setTab('community')}
+          icon={<Sparkles className="h-5 w-5" />}
+          label="Comunidad"
+        />
         <NavButton
           active={tab === 'chat'}
           onClick={() => (session ? setTab('chat') : setLoginOpen(true))}
@@ -577,6 +605,7 @@ export default function Home() {
       <nav className="hidden lg:flex sticky bottom-0 bg-white/95 backdrop-blur border-t border-[#0a3d2e]/10 px-2 py-2 justify-center gap-1">
         <DesktopNavButton active={tab === 'home'} onClick={() => setTab('home')} icon={<HomeIcon className="h-4 w-4" />} label="Inicio" />
         <DesktopNavButton active={tab === 'map'} onClick={() => setTab('map')} icon={<MapIcon className="h-4 w-4" />} label="Mapa del cantón" />
+        <DesktopNavButton active={tab === 'community'} onClick={() => setTab('community')} icon={<Sparkles className="h-4 w-4" />} label="Comunidad" />
         <DesktopNavButton
           active={tab === 'chat'}
           onClick={() => (session ? setTab('chat') : setLoginOpen(true))}

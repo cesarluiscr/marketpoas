@@ -98,6 +98,10 @@ export type Listing = {
   views?: number
   promoted?: boolean
   promotedUntil?: string | null
+  // Negociación e intercambio
+  negotiable?: boolean
+  exchangeFor?: string | null
+  previousPrice?: number | null
   // Campos meta por categoría
   metaKm?: number | null
   metaYear?: number | null

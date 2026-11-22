@@ -127,6 +127,8 @@ export async function POST(request: NextRequest) {
       metaKm, metaYear, metaBrand, metaModel,
       metaAreaM2, metaBedrooms, metaBathrooms,
       metaSize, metaWeight, metaCapacity,
+      // Negociación e intercambio
+      negotiable, exchangeFor,
     } = body
 
     if (!type || !['venta', 'compra'].includes(type)) {
@@ -179,6 +181,9 @@ export async function POST(request: NextRequest) {
         metaSize: metaSize?.trim() || null,
         metaWeight: metaWeight?.trim() || null,
         metaCapacity: metaCapacity?.trim() || null,
+        // Negociación e intercambio
+        negotiable: Boolean(negotiable),
+        exchangeFor: exchangeFor?.trim() || null,
       },
     })
 

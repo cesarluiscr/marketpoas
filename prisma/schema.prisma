@@ -17,6 +17,17 @@ model User {
   image     String?
   phone     String?
   emailVerified DateTime?
+  // KYC básico
+  kycStatus      String   @default("no_verificado") // no_verificado | pendiente | verificado | rechazado
+  kycIdImage     String?  // URL de la foto de cédula
+  kycSelfieImage String?  // URL del selfie con cédula
+  kycSubmittedAt DateTime?
+  kycReviewedAt  DateTime?
+  kycRejectReason String?
+  // Preferencias
+  theme          String   @default("light") // light | dark
+  // Notificaciones push
+  pushSubscription String?  // JSON con suscripción a Web Push
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   accounts  Account[]
@@ -91,6 +102,10 @@ model Listing {
   views       Int      @default(0)
   promoted    Boolean  @default(false)
   promotedUntil DateTime?
+  // Negociación e intercambio
+  negotiable  Boolean  @default(false)
+  exchangeFor String?  // Si acepta trueque, qué busca a cambio
+  previousPrice Float? // Si bajó el precio, mostrar antes
   // Campos personalizados (meta) por categoría
   metaKm        Int?      // Vehículos: kilometraje
   metaYear      Int?      // Vehículos: año
@@ -244,4 +259,81 @@ model Report {
 
   @@index([listingId])
   @@index([status])
+}
+
+// === Nuevas funcionalidades ===
+
+model Business {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  ownerId     String?
+  category    String   // comercio | restaurante | servicios | feria | taller
+  address     String?
+  phone       String?
+  whatsapp    String?
+  email       String?
+  imageUrl    String?
+  logoUrl     String?
+  // Horario (JSON: {mon:"8-18", tue:"8-18"...})
+  hours       String?
+  location    String?
+  lat         Float?
+  lng         Float?
+  verified    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([category])
+  @@index([verified])
+}
+
+model Event {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  date        DateTime
+  endDate     DateTime?
+  location    String?
+  address     String?
+  lat         Float?
+  lng         Float?
+  imageUrl    String?
+  organizer   String?
+  category    String   // feria | tope | fiesta_civica | cultural | deportivo | religioso
+  free        Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  @@index([date])
+  @@index([category])
+}
+
+model Bulletin {
+  id          String   @id @default(cuid())
+  title       String
+  body        String
+  type        String   // aviso | alerta | cierre_via | actividad | ayuda
+  priority    String   @default("normal") // normal | alta | urgente
+  imageUrl    String?
+  author      String   @default("Municipalidad de Poás")
+  publishUntil DateTime?
+  createdAt   DateTime @default(now())
+
+  @@index([type])
+  @@index([priority])
+  @@index([createdAt])
+}
+
+model Notification {
+  id          String   @id @default(cuid())
+  userId      String
+  type        String   // offer | message | question | review | system | favorite
+  title       String
+  body        String?
+  link        String?
+  read        Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@index([userId, read])
+  @@index([createdAt])
 }
