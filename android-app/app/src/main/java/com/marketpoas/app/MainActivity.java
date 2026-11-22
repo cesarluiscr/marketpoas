@@ -15,7 +15,7 @@ public class MainActivity extends Activity {
     private WebView webView;
     private ProgressBar progressBar;
     private AppWebChromeClient chromeClient;
-    private static final String APP_URL = "https://preview-e4bc9b1e-0523-4aef-beb2-7e5f61b39b2c.space-z.ai/";
+    private static final String APP_URL = "http://21.0.4.156:81/";
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
