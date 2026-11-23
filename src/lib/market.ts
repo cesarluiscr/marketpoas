@@ -161,3 +161,4 @@ export const CATEGORY_FIELDS: Record<string, CategoryField[]> = {
     { key: 'metaSize', label: 'Edad/Tamaño', type: 'text', placeholder: 'Ej: 6 meses, adulto' },
   ],
 }
+/* Force redeploy Mon Nov 23 22:12:37 UTC 2026 */
