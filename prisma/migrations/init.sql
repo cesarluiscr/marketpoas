@@ -1,0 +1,1 @@
+-- This ensures the schema is created
