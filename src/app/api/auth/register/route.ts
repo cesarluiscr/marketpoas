@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { hashPassword } from '@/lib/password'
 
 export const dynamic = 'force-dynamic'
 
@@ -7,13 +8,19 @@ export const dynamic = 'force-dynamic'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { email, name, phone } = body
+    const { email, name, phone, password } = body
 
     if (!email || !email.trim()) {
       return NextResponse.json({ error: 'Email requerido' }, { status: 400 })
     }
     if (!name || name.trim().length < 2) {
       return NextResponse.json({ error: 'Nombre requerido (mínimo 2 caracteres)' }, { status: 400 })
+    }
+    if (!password || typeof password !== 'string' || password.length < 6) {
+      return NextResponse.json({ error: 'La contraseña es requerida (mínimo 6 caracteres)' }, { status: 400 })
+    }
+    if (password.length > 100) {
+      return NextResponse.json({ error: 'La contraseña es demasiado larga (máximo 100 caracteres)' }, { status: 400 })
     }
 
     const emailNorm = email.toLowerCase().trim()
@@ -33,12 +40,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Crear usuario
+    // Crear usuario con contraseña
     const user = await db.user.create({
       data: {
         email: emailNorm,
         name: name.trim(),
         phone: phone?.trim() || null,
+        passwordHash: hashPassword(password),
       },
     })
 

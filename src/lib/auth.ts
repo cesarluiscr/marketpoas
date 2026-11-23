@@ -1,12 +1,7 @@
 import type { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import { db } from '@/lib/db'
-import crypto from 'crypto'
-
-function hashPassword(password: string): string {
-  const salt = 'marketpoas-salt-2026'
-  return crypto.createHash('sha256').update(salt + password).digest('hex')
-}
+import { hashPassword, verifyPassword } from '@/lib/password'
 
 export const authOptions: NextAuthOptions = {
   session: {
@@ -19,18 +14,33 @@ export const authOptions: NextAuthOptions = {
       name: 'Email',
       credentials: {
         email: { label: 'Email', type: 'email', placeholder: 'tu@correo.com' },
+        password: { label: 'Contraseña', type: 'password' },
         name: { label: 'Nombre', type: 'text', placeholder: 'Tu nombre' },
       },
       async authorize(credentials) {
-        if (!credentials?.email) return null
+        if (!credentials?.email || !credentials?.password) return null
         const email = credentials.email.toLowerCase().trim()
+        const password = credentials.password
         const name = credentials.name?.trim()
+
+        if (password.length < 6) return null
 
         // Buscar usuario existente (el registro es aparte ahora)
         let user = await db.user.findUnique({ where: { email } })
 
         if (!user) {
           // No existe: no se puede loguear. Debe registrarse primero.
+          return null
+        }
+
+        if (!user.passwordHash) {
+          // Cuenta creada antes del sistema de contraseñas:
+          // la primera contraseña que ingrese (mín. 6) queda asignada a la cuenta.
+          user = await db.user.update({
+            where: { id: user.id },
+            data: { passwordHash: hashPassword(password) },
+          })
+        } else if (!verifyPassword(password, user.passwordHash)) {
           return null
         }
 
@@ -65,8 +75,7 @@ export const authOptions: NextAuthOptions = {
         if (user.role !== 'admin') return null
         if (!user.passwordHash) return null
 
-        const hash = hashPassword(password)
-        if (hash !== user.passwordHash) return null
+        if (!verifyPassword(password, user.passwordHash)) return null
 
         return {
           id: user.id,

@@ -9,9 +9,47 @@ import { Label } from '@/components/ui/label'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog'
-import { User as UserIcon, Phone, Shield } from 'lucide-react'
+import { User as UserIcon, Phone, Shield, Eye, EyeOff } from 'lucide-react'
 
 type Mode = 'login' | 'register' | 'admin'
+
+// Campo de contraseña con botón para mostrar/ocultar
+function PasswordInput({
+  id, value, onChange, placeholder, show, onToggle, autoFocus = false,
+}: {
+  id: string
+  value: string
+  onChange: (v: string) => void
+  placeholder: string
+  show: boolean
+  onToggle: () => void
+  autoFocus?: boolean
+}) {
+  return (
+    <div className="relative mt-1">
+      <Input
+        id={id}
+        type={show ? 'text' : 'password'}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        required
+        autoFocus={autoFocus}
+        minLength={6}
+        className="rounded-xl border-[#0a3d2e]/15 focus-visible:ring-[#1a6b4a] pr-10"
+      />
+      <button
+        type="button"
+        onClick={onToggle}
+        className="absolute right-3 top-1/2 -translate-y-1/2 text-[#0a3d2e]/50 hover:text-[#0a3d2e]"
+        tabIndex={-1}
+        aria-label={show ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+      >
+        {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+      </button>
+    </div>
+  )
+}
 
 export default function LoginModal({
   open, onOpenChange, initialMode = 'login',
@@ -25,12 +63,18 @@ export default function LoginModal({
 
   // Campos login
   const [loginEmail, setLoginEmail] = useState('')
+  const [loginPassword, setLoginPassword] = useState('')
+  const [showLoginPassword, setShowLoginPassword] = useState(false)
   const [loginSubmitting, setLoginSubmitting] = useState(false)
 
   // Campos registro
   const [regName, setRegName] = useState('')
   const [regEmail, setRegEmail] = useState('')
   const [regPhone, setRegPhone] = useState('')
+  const [regPassword, setRegPassword] = useState('')
+  const [regPassword2, setRegPassword2] = useState('')
+  const [showRegPassword, setShowRegPassword] = useState(false)
+  const [showRegPassword2, setShowRegPassword2] = useState(false)
   const [regSubmitting, setRegSubmitting] = useState(false)
 
   // Campos admin
@@ -44,22 +88,33 @@ export default function LoginModal({
       toast({ title: 'Email requerido', variant: 'destructive' })
       return
     }
+    if (!loginPassword) {
+      toast({ title: 'Contraseña requerida', variant: 'destructive' })
+      return
+    }
+    if (loginPassword.length < 6) {
+      toast({ title: 'Contraseña muy corta', description: 'Mínimo 6 caracteres', variant: 'destructive' })
+      return
+    }
     setLoginSubmitting(true)
     try {
       const res = await signIn('credentials', {
         email: loginEmail.trim(),
+        password: loginPassword,
         redirect: false,
       })
       if (res?.error) {
         toast({
           title: 'No se pudo iniciar sesión',
-          description: 'Ese email no está registrado. Crea una cuenta en la pestaña "Registrarse".',
+          description: 'Email o contraseña incorrectos. Si no tienes cuenta, crea una en la pestaña "Registrarse".',
           variant: 'destructive',
         })
       } else {
         toast({ title: '¡Bienvenido a MarketPoás!', description: 'Sesión iniciada' })
         onOpenChange(false)
         setLoginEmail('')
+        setLoginPassword('')
+        setShowLoginPassword(false)
       }
     } catch {
       toast({ title: 'Error de red', variant: 'destructive' })
@@ -83,6 +138,18 @@ export default function LoginModal({
       toast({ title: 'Email inválido', variant: 'destructive' })
       return
     }
+    if (!regPassword) {
+      toast({ title: 'Contraseña requerida', description: 'Crea una contraseña para proteger tu cuenta', variant: 'destructive' })
+      return
+    }
+    if (regPassword.length < 6) {
+      toast({ title: 'Contraseña muy corta', description: 'Debe tener mínimo 6 caracteres', variant: 'destructive' })
+      return
+    }
+    if (regPassword !== regPassword2) {
+      toast({ title: 'Las contraseñas no coinciden', description: 'Verifica ambas contraseñas e inténtalo de nuevo', variant: 'destructive' })
+      return
+    }
 
     setRegSubmitting(true)
     try {
@@ -93,6 +160,7 @@ export default function LoginModal({
           email: regEmail.trim(),
           name: regName.trim(),
           phone: regPhone.trim() || null,
+          password: regPassword,
         }),
       })
       const data = await res.json()
@@ -103,10 +171,11 @@ export default function LoginModal({
       // Auto-login después del registro
       const signInRes = await signIn('credentials', {
         email: regEmail.trim(),
+        password: regPassword,
         redirect: false,
       })
       if (signInRes?.error) {
-        toast({ title: 'Cuenta creada', description: 'Inicia sesión con tu email' })
+        toast({ title: 'Cuenta creada', description: 'Inicia sesión con tu email y contraseña' })
         setMode('login')
         setLoginEmail(regEmail)
       } else {
@@ -115,6 +184,10 @@ export default function LoginModal({
         setRegName('')
         setRegEmail('')
         setRegPhone('')
+        setRegPassword('')
+        setRegPassword2('')
+        setShowRegPassword(false)
+        setShowRegPassword2(false)
       }
     } catch {
       toast({ title: 'Error de red', variant: 'destructive' })
@@ -228,6 +301,17 @@ export default function LoginModal({
                 autoFocus
                 className="mt-1 rounded-xl border-[#0a3d2e]/15 focus-visible:ring-[#1a6b4a]"
               />
+            </div>
+            <div>
+              <Label htmlFor="loginPassword" className="text-sm font-medium text-[#0a3d2e]">Contraseña</Label>
+              <PasswordInput
+                id="loginPassword"
+                value={loginPassword}
+                onChange={setLoginPassword}
+                placeholder="Tu contraseña"
+                show={showLoginPassword}
+                onToggle={() => setShowLoginPassword(!showLoginPassword)}
+              />
               <p className="text-[11px] text-[#0a3d2e]/50 mt-1">
                 ¿No tienes cuenta? Toca «Registrarse» arriba.
               </p>
@@ -271,6 +355,31 @@ export default function LoginModal({
                 placeholder="tu@correo.com"
                 required
                 className="mt-1 rounded-xl border-[#0a3d2e]/15 focus-visible:ring-[#1a6b4a]"
+              />
+            </div>
+            <div>
+              <Label htmlFor="regPassword" className="text-sm font-medium text-[#0a3d2e]">Crear contraseña *</Label>
+              <PasswordInput
+                id="regPassword"
+                value={regPassword}
+                onChange={setRegPassword}
+                placeholder="Mínimo 6 caracteres"
+                show={showRegPassword}
+                onToggle={() => setShowRegPassword(!showRegPassword)}
+              />
+              <p className="text-[11px] text-[#0a3d2e]/50 mt-1">
+                Mínimo 6 caracteres. La usarás para entrar a tu cuenta.
+              </p>
+            </div>
+            <div>
+              <Label htmlFor="regPassword2" className="text-sm font-medium text-[#0a3d2e]">Confirmar contraseña *</Label>
+              <PasswordInput
+                id="regPassword2"
+                value={regPassword2}
+                onChange={setRegPassword2}
+                placeholder="Repite la contraseña"
+                show={showRegPassword2}
+                onToggle={() => setShowRegPassword2(!showRegPassword2)}
               />
             </div>
             <div>
