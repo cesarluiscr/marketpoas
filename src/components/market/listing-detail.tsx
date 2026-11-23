@@ -575,7 +575,7 @@ export default function ListingDetailModal({
 
                 <div className="flex items-start gap-1.5 text-[11px] text-[#0a3d2e]/50 bg-[#fdf9ee] rounded-xl p-2.5 mt-2">
                   <Sprout className="h-3.5 w-3.5 mt-0.5 shrink-0 text-[#1a6b4a]" />
-                  <span>Reúnete en lugares públicos y verifica el producto antes de pagar. Cuídate entre vecinos.</span>
+                  <span>Reúnete en lugares públicos y verifica el producto antes de pagar.</span>
                 </div>
 
                 {/* Botón denunciar anuncio */}

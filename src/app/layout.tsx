@@ -16,8 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "MarketPoás - Compra y vende en Poás, Costa Rica",
-  description: "Marketplace del cantón de Poás, Alajuela. Publica lo que quieres vender o comprar entre vecinos de San Pedro, San Juan, Carrizal y Sabana Redonda.",
+  title: "MarketPoás - Compra y Venta en Poás, Costa Rica",
+  description: "Marketplace del cantón de Poás, Alajuela. Compra y Venta en Poás, Costa Rica.",
   keywords: ["MarketPoás", "Poás", "marketplace", "Costa Rica", "comprar", "vender", "Alajuela"],
   authors: [{ name: "MarketPoás" }],
   manifest: "/manifest.json",

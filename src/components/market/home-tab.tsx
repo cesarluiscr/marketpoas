@@ -74,9 +74,9 @@ export default function HomeTab(props: any) {
                 <Sparkles className="h-3 w-3" /> Marketplace del cantón de Poás
               </div>
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight leading-[1.05]">
-                Compra y vende<br />
-                <span className="bg-gradient-to-r from-[#d4a017] via-[#f0c75e] to-[#d4a017] bg-clip-text text-transparent">entre vecinos</span>{' '}
-                de Poás 🌋
+                Compra y Venta<br />
+                <span className="bg-gradient-to-r from-[#d4a017] via-[#f0c75e] to-[#d4a017] bg-clip-text text-transparent">en Poás</span>{' '}
+                🌋
               </h1>
             </div>
             <div className="flex gap-3 shrink-0">
