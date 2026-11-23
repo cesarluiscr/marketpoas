@@ -35,3 +35,4 @@ Thumbs.db
 *.keystore
 *.apk
 !public/
+.vercel

@@ -15,7 +15,7 @@ public class MainActivity extends Activity {
     private WebView webView;
     private ProgressBar progressBar;
     private AppWebChromeClient chromeClient;
-    private static final String APP_URL = "http://21.0.4.156:81/";
+    private static final String APP_URL = "https://agile-draco-v07t5i8.tmp.now";
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
