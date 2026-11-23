@@ -6,11 +6,16 @@ import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Label } from '@/components/ui/label'
+import { Input } from '@/components/ui/input'
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
+} from '@/components/ui/dialog'
 import { useToast } from '@/hooks/use-toast'
 import {
   MapPin, Trash2, CircleDot, CheckCircle2, PauseCircle,
   RefreshCw, Sparkles, TrendingDown, Eye, Heart, Bookmark,
-  X, Search,
+  X, Search, KeyRound, EyeOff,
 } from 'lucide-react'
 import { formatCRCFull, formatRelativeTime, CATEGORY_ICONS, type Listing } from '@/lib/market'
 
@@ -48,6 +53,81 @@ export default function MineTab({
   const [offers, setOffers] = useState<Offer[]>([])
   const [savedSearches, setSavedSearches] = useState<SavedSearch[]>([])
   const [subTab, setSubTab] = useState<SubTab>('listings')
+
+  // Cambiar contraseña
+  const [showChangePassword, setShowChangePassword] = useState(false)
+  const [hasPassword, setHasPassword] = useState(true)
+  const [cpCurrent, setCpCurrent] = useState('')
+  const [cpNew, setCpNew] = useState('')
+  const [cpNew2, setCpNew2] = useState('')
+  const [showCpCurrent, setShowCpCurrent] = useState(false)
+  const [showCpNew, setShowCpNew] = useState(false)
+  const [cpSubmitting, setCpSubmitting] = useState(false)
+
+  const fetchPasswordStatus = async () => {
+    if (!session) return
+    try {
+      const res = await fetch('/api/auth/change-password')
+      if (res.ok) {
+        const data = await res.json()
+        setHasPassword(!!data.hasPassword)
+      }
+    } catch {}
+  }
+
+  useEffect(() => {
+    fetchPasswordStatus()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.user?.id])
+
+  const openChangePassword = () => {
+    setCpCurrent('')
+    setCpNew('')
+    setCpNew2('')
+    setShowCpCurrent(false)
+    setShowCpNew(false)
+    fetchPasswordStatus()
+    setShowChangePassword(true)
+  }
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (cpNew.length < 6) {
+      toast({ title: 'Contraseña muy corta', description: 'Debe tener mínimo 6 caracteres', variant: 'destructive' })
+      return
+    }
+    if (cpNew !== cpNew2) {
+      toast({ title: 'Las contraseñas no coinciden', description: 'Verifica ambas contraseñas', variant: 'destructive' })
+      return
+    }
+    if (hasPassword && !cpCurrent) {
+      toast({ title: 'Falta tu contraseña actual', description: 'Escribe tu contraseña actual para confirmar', variant: 'destructive' })
+      return
+    }
+    setCpSubmitting(true)
+    try {
+      const res = await fetch('/api/auth/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ currentPassword: cpCurrent, newPassword: cpNew }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        toast({ title: 'No se pudo cambiar', description: data.error, variant: 'destructive' })
+        return
+      }
+      toast({ title: 'Contraseña actualizada', description: 'Úsala la próxima vez que inicies sesión' })
+      setShowChangePassword(false)
+      setHasPassword(true)
+      setCpCurrent('')
+      setCpNew('')
+      setCpNew2('')
+    } catch {
+      toast({ title: 'Error de red', variant: 'destructive' })
+    } finally {
+      setCpSubmitting(false)
+    }
+  }
 
   const fetchMyListings = async () => {
     if (!session) {
@@ -185,9 +265,19 @@ export default function MineTab({
 
   return (
     <main className="flex-1 mx-auto max-w-6xl w-full px-4 py-6">
-      <div className="mb-4">
-        <h2 className="text-xl font-bold text-[#0a3d2e]">Mi cuenta</h2>
-        <p className="text-sm text-[#0a3d2e]/60">Administra tus anuncios, favoritos, ofertas y búsquedas guardadas</p>
+      <div className="mb-4 flex items-start justify-between gap-3 flex-wrap">
+        <div>
+          <h2 className="text-xl font-bold text-[#0a3d2e]">Mi cuenta</h2>
+          <p className="text-sm text-[#0a3d2e]/60">Administra tus anuncios, favoritos, ofertas y búsquedas guardadas</p>
+        </div>
+        <Button
+          variant="outline"
+          onClick={openChangePassword}
+          className="rounded-xl border-[#0a3d2e]/20 text-[#0a3d2e] hover:bg-[#0a3d2e]/5 gap-1.5 shrink-0"
+        >
+          <KeyRound className="h-4 w-4" />
+          Cambiar contraseña
+        </Button>
       </div>
 
       {/* Sub-tabs */}
@@ -469,6 +559,98 @@ export default function MineTab({
           )}
         </>
       )}
+
+      {/* Diálogo: cambiar contraseña */}
+      <Dialog open={showChangePassword} onOpenChange={setShowChangePassword}>
+        <DialogContent className="max-w-sm rounded-3xl border-[#0a3d2e]/15" aria-describedby={undefined}>
+          <DialogHeader>
+            <DialogTitle className="text-[#0a3d2e] flex items-center gap-2 text-xl">
+              <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-[#0a3d2e] to-[#1a6b4a] flex items-center justify-center">
+                <KeyRound className="h-5 w-5 text-white" />
+              </div>
+              Cambiar contraseña
+            </DialogTitle>
+            <DialogDescription className="text-[#0a3d2e]/70">
+              {hasPassword
+                ? 'Confirma tu contraseña actual y define una nueva.'
+                : 'Tu cuenta todavía no tenía contraseña. Define una ahora para protegerla.'}
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleChangePassword} className="space-y-3">
+            {hasPassword && (
+              <div>
+                <Label htmlFor="cpCurrent" className="text-sm font-medium text-[#0a3d2e]">Contraseña actual</Label>
+                <div className="relative mt-1">
+                  <Input
+                    id="cpCurrent"
+                    type={showCpCurrent ? 'text' : 'password'}
+                    value={cpCurrent}
+                    onChange={(e) => setCpCurrent(e.target.value)}
+                    placeholder="Tu contraseña actual"
+                    required
+                    className="rounded-xl border-[#0a3d2e]/15 focus-visible:ring-[#1a6b4a] pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowCpCurrent(!showCpCurrent)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#0a3d2e]/50 hover:text-[#0a3d2e]"
+                    tabIndex={-1}
+                    aria-label={showCpCurrent ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                  >
+                    {showCpCurrent ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+            )}
+            <div>
+              <Label htmlFor="cpNew" className="text-sm font-medium text-[#0a3d2e]">Nueva contraseña</Label>
+              <div className="relative mt-1">
+                <Input
+                  id="cpNew"
+                  type={showCpNew ? 'text' : 'password'}
+                  value={cpNew}
+                  onChange={(e) => setCpNew(e.target.value)}
+                  placeholder="Mínimo 6 caracteres"
+                  required
+                  minLength={6}
+                  className="rounded-xl border-[#0a3d2e]/15 focus-visible:ring-[#1a6b4a] pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowCpNew(!showCpNew)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#0a3d2e]/50 hover:text-[#0a3d2e]"
+                  tabIndex={-1}
+                  aria-label={showCpNew ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                >
+                  {showCpNew ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="cpNew2" className="text-sm font-medium text-[#0a3d2e]">Confirmar nueva contraseña</Label>
+              <Input
+                id="cpNew2"
+                type="password"
+                value={cpNew2}
+                onChange={(e) => setCpNew2(e.target.value)}
+                placeholder="Repite la nueva contraseña"
+                required
+                minLength={6}
+                className="mt-1 rounded-xl border-[#0a3d2e]/15 focus-visible:ring-[#1a6b4a]"
+              />
+            </div>
+            <DialogFooter>
+              <Button
+                type="submit"
+                disabled={cpSubmitting}
+                className="w-full bg-gradient-to-br from-[#0a3d2e] to-[#1a6b4a] hover:from-[#062920] hover:to-[#0a3d2e] text-white rounded-xl shadow-volcano"
+              >
+                {cpSubmitting ? 'Guardando...' : 'Guardar nueva contraseña'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </main>
   )
 }

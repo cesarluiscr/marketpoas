@@ -9,11 +9,14 @@ import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
+} from '@/components/ui/dialog'
 import { useToast } from '@/hooks/use-toast'
 import {
   Shield, CheckCircle2, XCircle, Flag, Megaphone, Calendar,
   Store, Users, Trash2, BadgeCheck, AlertTriangle, BarChart3,
-  TrendingUp, Clock, MessageCircle, Star,
+  TrendingUp, Clock, MessageCircle, Star, KeyRound, Eye, EyeOff,
 } from 'lucide-react'
 import { LOCATIONS } from '@/lib/market'
 
@@ -258,6 +261,55 @@ export default function AdminTab() {
         fetchAll()
       }
     } catch {}
+  }
+
+  // Restablecer contraseña de un usuario
+  const [resetUser, setResetUser] = useState<User | null>(null)
+  const [resetPass, setResetPass] = useState('')
+  const [resetPass2, setResetPass2] = useState('')
+  const [showResetPass, setShowResetPass] = useState(false)
+  const [resetSubmitting, setResetSubmitting] = useState(false)
+
+  const openResetPassword = (u: User) => {
+    setResetUser(u)
+    setResetPass('')
+    setResetPass2('')
+    setShowResetPass(false)
+  }
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!resetUser) return
+    if (!resetPass || resetPass.length < 6) {
+      toast({ title: 'Contraseña muy corta', description: 'Mínimo 6 caracteres', variant: 'destructive' })
+      return
+    }
+    if (resetPass !== resetPass2) {
+      toast({ title: 'Las contraseñas no coinciden', variant: 'destructive' })
+      return
+    }
+    setResetSubmitting(true)
+    try {
+      const res = await fetch('/api/admin/users', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: resetUser.id, newPassword: resetPass }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        toast({ title: 'No se pudo restablecer', description: data.error, variant: 'destructive' })
+        return
+      }
+      toast({
+        title: 'Contraseña restablecida',
+        description: `Comunícale a ${resetUser.name || resetUser.email} su nueva contraseña para que entre y la cambie.`,
+      })
+      setResetUser(null)
+    } catch {
+      toast({ title: 'Error de red', variant: 'destructive' })
+    } finally {
+      setResetSubmitting(false)
+    }
   }
 
   const handleDelete = async (type: string, id: string) => {
@@ -887,6 +939,15 @@ export default function AdminTab() {
                         <SelectItem value="admin">Admin</SelectItem>
                       </SelectContent>
                     </Select>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => openResetPassword(u)}
+                      title="Restablecer contraseña"
+                      className="h-8 w-8 p-0 rounded-lg border-[#0a3d2e]/15 text-[#0a3d2e]/70 hover:text-[#0a3d2e] hover:bg-[#0a3d2e]/5 shrink-0"
+                    >
+                      <KeyRound className="h-3.5 w-3.5" />
+                    </Button>
                   </Card>
                 ))
               )}
@@ -894,6 +955,71 @@ export default function AdminTab() {
           )}
         </>
       )}
+
+      {/* Diálogo: restablecer contraseña de un usuario */}
+      <Dialog open={!!resetUser} onOpenChange={(v) => !v && setResetUser(null)}>
+        <DialogContent className="max-w-sm rounded-3xl border-[#0a3d2e]/15" aria-describedby={undefined}>
+          <DialogHeader>
+            <DialogTitle className="text-[#0a3d2e] flex items-center gap-2 text-xl">
+              <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-[#0a3d2e] to-[#1a6b4a] flex items-center justify-center">
+                <KeyRound className="h-5 w-5 text-white" />
+              </div>
+              Restablecer contraseña
+            </DialogTitle>
+            <DialogDescription className="text-[#0a3d2e]/70">
+              Define una contraseña temporal para <strong>{resetUser?.name || resetUser?.email}</strong>. Comunícasela por teléfono o WhatsApp para que entre y la cambie en «Mi cuenta».
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleResetPassword} className="space-y-3">
+            <div>
+              <Label htmlFor="resetPass" className="text-sm font-medium text-[#0a3d2e]">Nueva contraseña temporal</Label>
+              <div className="relative mt-1">
+                <Input
+                  id="resetPass"
+                  type={showResetPass ? 'text' : 'password'}
+                  value={resetPass}
+                  onChange={(e) => setResetPass(e.target.value)}
+                  placeholder="Mínimo 6 caracteres"
+                  required
+                  minLength={6}
+                  className="rounded-xl border-[#0a3d2e]/15 focus-visible:ring-[#1a6b4a] pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowResetPass(!showResetPass)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#0a3d2e]/50 hover:text-[#0a3d2e]"
+                  tabIndex={-1}
+                  aria-label={showResetPass ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                >
+                  {showResetPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="resetPass2" className="text-sm font-medium text-[#0a3d2e]">Confirmar contraseña</Label>
+              <Input
+                id="resetPass2"
+                type="password"
+                value={resetPass2}
+                onChange={(e) => setResetPass2(e.target.value)}
+                placeholder="Repite la contraseña"
+                required
+                minLength={6}
+                className="mt-1 rounded-xl border-[#0a3d2e]/15 focus-visible:ring-[#1a6b4a]"
+              />
+            </div>
+            <DialogFooter>
+              <Button
+                type="submit"
+                disabled={resetSubmitting}
+                className="w-full bg-gradient-to-br from-[#0a3d2e] to-[#1a6b4a] hover:from-[#062920] hover:to-[#0a3d2e] text-white rounded-xl shadow-volcano"
+              >
+                {resetSubmitting ? 'Restableciendo...' : 'Restablecer contraseña'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </main>
   )
 }

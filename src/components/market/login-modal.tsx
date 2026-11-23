@@ -9,9 +9,9 @@ import { Label } from '@/components/ui/label'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog'
-import { User as UserIcon, Phone, Shield, Eye, EyeOff } from 'lucide-react'
+import { User as UserIcon, Phone, Shield, Eye, EyeOff, KeyRound, LifeBuoy } from 'lucide-react'
 
-type Mode = 'login' | 'register' | 'admin'
+type Mode = 'login' | 'register' | 'admin' | 'recover'
 
 // Campo de contraseña con botón para mostrar/ocultar
 function PasswordInput({
@@ -239,22 +239,27 @@ export default function LoginModal({
             <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-[#0a3d2e] to-[#1a6b4a] flex items-center justify-center">
               {mode === 'admin' ? (
                 <Shield className="h-5 w-5 text-white" />
+              ) : mode === 'recover' ? (
+                <LifeBuoy className="h-5 w-5 text-white" />
               ) : (
                 <UserIcon className="h-5 w-5 text-white" />
               )}
             </div>
-            {mode === 'login' ? 'Entrar a MarketPoás' : mode === 'register' ? 'Crear cuenta' : 'Acceso administrador'}
+            {mode === 'login' ? 'Entrar a MarketPoás' : mode === 'register' ? 'Crear cuenta' : mode === 'recover' ? 'Recuperar contraseña' : 'Acceso administrador'}
           </DialogTitle>
           <DialogDescription className="text-[#0a3d2e]/70">
             {mode === 'login'
               ? 'Inicia sesión para publicar anuncios y chatear con otros vecinos de Poás.'
               : mode === 'register'
               ? 'Crea tu cuenta para publicar anuncios y chatear con otros vecinos del cantón.'
+              : mode === 'recover'
+              ? 'Recupera el acceso a tu cuenta si olvidaste tu contraseña.'
               : 'Acceso exclusivo para administradores del cantón de Poás.'}
           </DialogDescription>
         </DialogHeader>
 
         {/* Tabs: 3 modos */}
+        {mode !== 'recover' && (
         <div className="flex bg-[#0a3d2e]/5 rounded-xl p-1 gap-1 mb-4">
           <button
             type="button"
@@ -285,6 +290,36 @@ export default function LoginModal({
             Admin
           </button>
         </div>
+        )}
+
+        {/* Vista RECUPERAR contraseña */}
+        {mode === 'recover' && (
+          <div className="space-y-3">
+            <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 space-y-3">
+              <div className="flex items-start gap-2.5">
+                <KeyRound className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+                <div className="text-sm text-[#0a3d2e]/80 space-y-2">
+                  <p className="font-semibold text-[#0a3d2e]">¿Olvidaste tu contraseña?</p>
+                  <p>1. Contacta al administrador de MarketPoás por teléfono o WhatsApp.</p>
+                  <p>2. El administrador le asignará una contraseña temporal a tu cuenta desde su panel.</p>
+                  <p>3. Entra con esa contraseña temporal y cámbiala en <strong>«Mi cuenta → Cambiar contraseña»</strong>.</p>
+                </div>
+              </div>
+            </div>
+            <div className="bg-[#0a3d2e]/5 rounded-2xl p-3 text-xs text-[#0a3d2e]/70">
+              Consejo: crea una contraseña fácil de recordar para ti, pero difícil de adivinar para otros. Usa letras, números y símbolos.
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                onClick={() => setMode('login')}
+                className="w-full bg-gradient-to-br from-[#0a3d2e] to-[#1a6b4a] hover:from-[#062920] hover:to-[#0a3d2e] text-white rounded-xl shadow-volcano"
+              >
+                Volver a iniciar sesión
+              </Button>
+            </DialogFooter>
+          </div>
+        )}
 
         {/* Formulario LOGIN vecino */}
         {mode === 'login' && (
@@ -312,8 +347,15 @@ export default function LoginModal({
                 show={showLoginPassword}
                 onToggle={() => setShowLoginPassword(!showLoginPassword)}
               />
-              <p className="text-[11px] text-[#0a3d2e]/50 mt-1">
-                ¿No tienes cuenta? Toca «Registrarse» arriba.
+              <p className="text-[11px] text-[#0a3d2e]/50 mt-1 flex items-center justify-between">
+                <span>¿No tienes cuenta? Toca «Registrarse» arriba.</span>
+                <button
+                  type="button"
+                  onClick={() => setMode('recover')}
+                  className="font-semibold text-[#1a6b4a] hover:underline shrink-0"
+                >
+                  ¿Olvidaste tu contraseña?
+                </button>
               </p>
             </div>
             <DialogFooter>
@@ -475,10 +517,17 @@ export default function LoginModal({
               </button>
             </>
           )}
-          {mode !== 'admin' && (
+          {(mode === 'login' || mode === 'register') && (
             <div>
               <button type="button" onClick={() => setMode('admin')} className="font-semibold text-[#0a3d2e]/70 hover:underline">
                 ¿Eres administrador? Entra aquí
+              </button>
+            </div>
+          )}
+          {mode === 'recover' && (
+            <div>
+              <button type="button" onClick={() => setMode('login')} className="font-semibold text-[#1a6b4a] hover:underline">
+                ← Volver a entrar
               </button>
             </div>
           )}
