@@ -391,13 +391,14 @@ export default function Home() {
     <div className="min-h-screen flex flex-col bg-[#fdf9ee] pattern-coffee pb-16 lg:pb-0">
       {/* HEADER */}
       <header className="sticky top-0 z-40 w-full border-b border-[#0a3d2e]/10 glass">
-        <div className="mx-auto max-w-6xl px-4 py-3 flex items-center gap-3">
+        {/* Fila 1: logo + botones (sin buscador en mobile) */}
+        <div className="mx-auto max-w-6xl px-3 sm:px-4 py-2.5 flex items-center gap-2 sm:gap-3">
           <button
-            onClick={() => setTab('home')}
-            className="flex items-center gap-2.5 shrink-0"
+            onClick={() => { clearFilters(); setSortBy('recent'); setTab('home') }}
+            className="flex items-center gap-2 sm:gap-2.5 shrink-0"
             aria-label="MarketPoás inicio"
           >
-            <div className="relative h-10 w-10 rounded-2xl bg-gradient-to-br from-[#0a3d2e] via-[#1a6b4a] to-[#2d8a6a] flex items-center justify-center shadow-volcano overflow-hidden">
+            <div className="relative h-9 w-9 sm:h-10 sm:w-10 rounded-xl sm:rounded-2xl bg-gradient-to-br from-[#0a3d2e] via-[#1a6b4a] to-[#2d8a6a] flex items-center justify-center shadow-volcano overflow-hidden">
               <svg viewBox="0 0 40 40" className="h-full w-full p-1.5" fill="none">
                 <circle cx="29" cy="13" r="3.5" fill="#d4a017" opacity="0.85" />
                 <path d="M2 32 L12 18 L20 26 L26 22 L38 32 Z" fill="#fdf9ee" opacity="0.95" />
@@ -416,20 +417,22 @@ export default function Home() {
             </div>
           </button>
 
+          {/* Buscador - desktop (en la misma línea) */}
           {(tab === 'home' || tab === 'map') && (
-            <div className="flex-1 relative">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#0a3d2e]/40 pointer-events-none" />
+            <div className="hidden sm:flex flex-1 relative min-w-0">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-[#0a3d2e]/40 pointer-events-none z-10" />
               <Input
                 type="search"
-                placeholder="Buscar café, fresas, bicicleta..."
+                placeholder="Buscar anuncios en Poás..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-3 h-11 border-[#0a3d2e]/15 bg-white/70 focus-visible:ring-[#1a6b4a] focus-visible:border-[#1a6b4a] rounded-xl placeholder:text-[#0a3d2e]/40"
+                className="w-full pl-11 pr-3 h-11 border-[#0a3d2e]/15 bg-white/70 focus-visible:ring-[#1a6b4a] focus-visible:border-[#1a6b4a] rounded-xl placeholder:text-[#0a3d2e]/50"
+                aria-label="Buscar anuncios en MarketPoás"
               />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-[#0a3d2e]/40 hover:text-[#0a3d2e] rounded-md hover:bg-[#0a3d2e]/5"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-[#0a3d2e]/40 hover:text-[#0a3d2e] rounded-md hover:bg-[#0a3d2e]/5 transition-colors"
                   aria-label="Borrar búsqueda"
                 >
                   <X className="h-4 w-4" />
@@ -437,7 +440,7 @@ export default function Home() {
               )}
             </div>
           )}
-          <div className="flex-1" />
+          <div className="flex-1 sm:hidden" />
 
           {/* Usuario */}
           {session ? (
@@ -484,12 +487,36 @@ export default function Home() {
 
           <Button
             onClick={() => (session ? setPublishOpen(true) : setLoginOpen(true))}
-            className="shrink-0 bg-gradient-to-br from-[#0a3d2e] to-[#1a6b4a] hover:from-[#062920] hover:to-[#0a3d2e] text-white gap-1.5 shadow-volcano rounded-xl h-11 px-4"
+            className="shrink-0 bg-gradient-to-br from-[#0a3d2e] to-[#1a6b4a] hover:from-[#062920] hover:to-[#0a3d2e] text-white gap-1.5 shadow-volcano rounded-xl h-10 sm:h-11 px-3 sm:px-4"
           >
             <Plus className="h-4 w-4" strokeWidth={2.5} />
             <span className="hidden sm:inline font-semibold">Publicar</span>
           </Button>
         </div>
+
+        {/* Fila 2: buscador en mobile (línea completa) */}
+        {(tab === 'home' || tab === 'map') && (
+          <div className="sm:hidden px-3 pb-2.5 relative">
+            <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-[#0a3d2e]/40 pointer-events-none z-10" />
+            <Input
+              type="search"
+              placeholder="Buscar anuncios en MarketPoás..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-11 pr-10 h-12 border-[#0a3d2e]/15 bg-white/90 focus-visible:ring-[#1a6b4a] focus-visible:border-[#1a6b4a] rounded-xl placeholder:text-[#0a3d2e]/50 text-base"
+              aria-label="Buscar anuncios en MarketPoás"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-5 top-1/2 -translate-y-1/2 p-1.5 text-[#0a3d2e]/40 hover:text-[#0a3d2e] rounded-md hover:bg-[#0a3d2e]/5 transition-colors"
+                aria-label="Borrar búsqueda"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            )}
+          </div>
+        )}
       </header>
 
       {/* CONTENT */}
