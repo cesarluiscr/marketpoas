@@ -15,7 +15,7 @@ public class MainActivity extends Activity {
     private WebView webView;
     private ProgressBar progressBar;
     private AppWebChromeClient chromeClient;
-    private static final String APP_URL = "https://agile-draco-v07t5i8.tmp.now";
+    private static final String APP_URL = "https://marketpoas-eqcw.vercel.app";
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
