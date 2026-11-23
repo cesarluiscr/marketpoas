@@ -36,3 +36,8 @@ Thumbs.db
 *.apk
 !public/
 .vercel
+.env
+.env.local
+.env*.local
+tsconfig.tsbuildinfo
+*.tsbuildinfo
