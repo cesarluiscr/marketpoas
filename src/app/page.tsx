@@ -68,6 +68,7 @@ export default function Home() {
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null)
   const [publishOpen, setPublishOpen] = useState(false)
   const [loginOpen, setLoginOpen] = useState(false)
+  const [loginMode, setLoginMode] = useState<'login' | 'register' | 'admin'>('login')
 
   const [favoriteIds, setFavoriteIds] = useState<string[]>([])
   const [userRole, setUserRole] = useState<string | null>(null)
@@ -463,14 +464,24 @@ export default function Home() {
               </Button>
             </div>
           ) : (
-            <Button
-              variant="outline"
-              onClick={() => setLoginOpen(true)}
-              className="shrink-0 border-[#0a3d2e]/15 text-[#0a3d2e] bg-white/70 hover:bg-white rounded-xl h-11 gap-1.5 px-3 sm:px-4"
-            >
-              <UserIcon className="h-4 w-4" />
-              <span className="text-sm font-semibold">Entrar</span>
-            </Button>
+            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+              <Button
+                variant="outline"
+                onClick={() => { setLoginMode('login'); setLoginOpen(true) }}
+                className="border-[#0a3d2e]/15 text-[#0a3d2e] bg-white/70 hover:bg-white rounded-xl h-10 sm:h-11 gap-1.5 px-2.5 sm:px-3"
+              >
+                <UserIcon className="h-4 w-4" />
+                <span className="hidden sm:inline text-sm font-semibold">Entrar</span>
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={() => { setLoginMode('register'); setLoginOpen(true) }}
+                className="border border-[#1a6b4a]/30 text-[#1a6b4a] hover:bg-[#1a6b4a]/5 rounded-xl h-10 sm:h-11 gap-1.5 px-2.5 sm:px-3"
+                style={{ fontWeight: 600 }}
+              >
+                <span className="text-xs sm:text-sm">Registrarse</span>
+              </Button>
+            </div>
           )}
 
           {/* Toggle tema */}
@@ -709,7 +720,7 @@ export default function Home() {
         />
       )}
 
-      <LoginModal open={loginOpen} onOpenChange={setLoginOpen} />
+      <LoginModal open={loginOpen} onOpenChange={setLoginOpen} initialMode={loginMode} />
 
       <Toaster />
     </div>
