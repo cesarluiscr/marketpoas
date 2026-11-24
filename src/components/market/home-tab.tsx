@@ -84,14 +84,18 @@ export default function HomeTab(props: any) {
               <HeroStat icon={<TrendingDown className="h-5 w-5" />} value={stats.compra} label="Se compra" accent="strawberry" />
             </div>
           </div>
-          <div className="lg:hidden mt-6 flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 no-scrollbar">
-            <CategoryChip active={categoryFilter === 'todas'} onClick={() => setCategoryFilter('todas')} label="Todas" icon="🌋" />
-            {CATEGORIES.map((c: string) => (
-              <CategoryChip key={c} active={categoryFilter === c} onClick={() => setCategoryFilter(c === categoryFilter ? 'todas' : c)} label={c} icon={CATEGORY_ICONS[c]} />
-            ))}
-          </div>
         </div>
         <svg viewBox="0 0 1200 40" preserveAspectRatio="none" className="absolute bottom-0 w-full h-8 fill-[#fdf9ee]" />
+      </section>
+
+      {/* Franja de categorías (móvil) - fondo claro y sombra para que se aprecien */}
+      <section className="lg:hidden bg-[#fdf9ee] border-b border-[#0a3d2e]/8 shadow-sm">
+        <div className="mx-auto max-w-6xl px-4 py-3 flex gap-2 overflow-x-auto no-scrollbar">
+          <CategoryChip active={categoryFilter === 'todas'} onClick={() => setCategoryFilter('todas')} label="Todas" icon="🌋" />
+          {CATEGORIES.map((c: string) => (
+            <CategoryChip key={c} active={categoryFilter === c} onClick={() => setCategoryFilter(c === categoryFilter ? 'todas' : c)} label={c} icon={CATEGORY_ICONS[c]} />
+          ))}
+        </div>
       </section>
 
       <main className="flex-1 mx-auto max-w-6xl w-full px-4 py-6">
@@ -286,7 +290,15 @@ function FilterChip({ active, onClick, label, icon, activeColor = 'forest' }: an
 
 function CategoryChip({ active, onClick, label, icon }: { active: boolean; onClick: () => void; label: string; icon: string }) {
   return (
-    <button type="button" onClick={onClick} className={`shrink-0 px-3.5 py-2 rounded-full text-xs font-medium border transition-all flex items-center gap-1.5 shadow-sm ${active ? 'bg-[#0a3d2e] text-white border-[#0a3d2e]' : 'bg-white/90 text-[#0a3d2e] border-[#0a3d2e]/12 hover:border-[#0a3d2e]/25'}`}>
+    <button
+      type="button"
+      onClick={onClick}
+      className={`shrink-0 px-3.5 py-2 rounded-full text-xs font-semibold border-2 transition-all flex items-center gap-1.5 shadow-md ${
+        active
+          ? 'bg-[#0a3d2e] text-white border-[#0a3d2e]'
+          : 'bg-white text-[#0a3d2e] border-[#1a6b4a]/40 hover:border-[#1a6b4a] hover:bg-[#1a6b4a]/5'
+      }`}
+    >
       <span>{icon}</span>{label}
     </button>
   )
